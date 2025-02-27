@@ -1,0 +1,10 @@
+---
+description: When adding new ui components
+globs: 
+alwaysApply: false
+---
+
+# ShadCN new UI components
+
+- when you need to add a new UI component, please use shadcn components and place them in /components/ui
+- use the following command to install new UI components: pnpm dlx shadcn@canary add [component-name]
