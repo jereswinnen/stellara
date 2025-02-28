@@ -3,8 +3,9 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/auth-provider";
-import { DateTime } from "@/components/modules/DateTime";
-import { Notes } from "@/components/modules/Notes";
+import { DateTime } from "@/components/widgets/DateTime";
+import { Notes } from "@/components/widgets/Notes";
+import { PokemonOfTheDay } from "@/components/widgets/PokemonOfTheDay";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
@@ -35,7 +36,11 @@ export default function Home() {
               Welcome back, {user.user_metadata.full_name || user.email}
             </p>
           </div>
-          <Button variant="outline" onClick={() => signOut()}>
+          <Button
+            className="cursor-pointer"
+            variant="outline"
+            onClick={() => signOut()}
+          >
             Sign Out
           </Button>
         </div>
@@ -43,12 +48,17 @@ export default function Home() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* DateTime Module */}
-        <div className="h-[200px]">
+        <div className="lg:col-span-1">
           <DateTime />
         </div>
 
+        {/* PokemonOfTheDay Module */}
+        <div className="lg:col-span-2 md:row-span-2">
+          <PokemonOfTheDay />
+        </div>
+
         {/* Notes Module */}
-        <div className="lg:col-span-2">
+        <div className="col-span-full">
           <Notes />
         </div>
       </div>

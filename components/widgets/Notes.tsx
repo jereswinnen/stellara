@@ -164,6 +164,7 @@ export function Notes() {
               />
               <div className="flex justify-end">
                 <Button
+                  className="cursor-pointer"
                   onClick={handleNewNoteSave}
                   disabled={isSaving || !newNoteContent.trim()}
                 >
@@ -221,7 +222,9 @@ export function Notes() {
               onOpenChange={setIsDeleteDialogOpen}
             >
               <DialogTrigger asChild>
-                <Button variant="destructive">Delete Note</Button>
+                <Button className="cursor-pointer" variant="destructive">
+                  Delete Note
+                </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
@@ -233,12 +236,17 @@ export function Notes() {
                 </DialogHeader>
                 <DialogFooter>
                   <Button
+                    className="cursor-pointer"
                     variant="outline"
                     onClick={() => setIsDeleteDialogOpen(false)}
                   >
                     Cancel
                   </Button>
-                  <Button variant="destructive" onClick={handleDeleteNote}>
+                  <Button
+                    className="cursor-pointer"
+                    variant="destructive"
+                    onClick={handleDeleteNote}
+                  >
                     Delete
                   </Button>
                 </DialogFooter>
@@ -246,9 +254,15 @@ export function Notes() {
             </Dialog>
             <div className="flex gap-2">
               <DrawerClose asChild>
-                <Button variant="outline">Cancel</Button>
+                <Button className="cursor-pointer" variant="outline">
+                  Cancel
+                </Button>
               </DrawerClose>
-              <Button onClick={handleEditNoteSave} disabled={isSaving}>
+              <Button
+                className="cursor-pointer"
+                onClick={handleEditNoteSave}
+                disabled={isSaving}
+              >
                 {isSaving ? "Saving..." : "Save Changes"}
               </Button>
             </div>
