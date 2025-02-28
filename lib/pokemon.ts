@@ -62,14 +62,14 @@ export async function fetchPokemonData(id: number): Promise<PokemonData> {
       .replace(/\u000c/g, " ");
 
     return {
-      id: pokemon.id,
       name: pokemon.name,
+      id: pokemon.id,
       sprite:
         pokemon.sprites.other["official-artwork"].front_default ||
         pokemon.sprites.front_default ||
         "",
-      flavorText: cleanFlavorText,
       types: pokemon.types.map((type: any) => type.type.name),
+      flavorText: cleanFlavorText,
     };
   } catch (error) {
     console.error("Error fetching Pokemon data:", error);
