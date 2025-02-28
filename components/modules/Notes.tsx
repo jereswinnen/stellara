@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card } from "@/components/ui/card";
+import { supabase } from "@/lib/supabase";
+import type { Note } from "@/lib/supabase";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -21,8 +23,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { supabase } from "@/lib/supabase";
-import type { Note } from "@/lib/supabase";
+import { Separator } from "@/components/ui/separator";
+import { formatDistanceToNow } from "date-fns";
 
 export function Notes() {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -147,44 +149,59 @@ export function Notes() {
 
   return (
     <div className="space-y-4">
-      <Card className="p-4">
-        <Textarea
-          placeholder="Write a new note..."
-          value={newNoteContent}
-          onChange={(e) => setNewNoteContent(e.target.value)}
-          className="min-h-[100px]"
-        />
-        <div className="flex justify-end">
-          <Button
-            onClick={handleNewNoteSave}
-            disabled={isSaving || !newNoteContent.trim()}
-          >
-            {isSaving ? "Saving..." : "Save Note"}
-          </Button>
-        </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg font-medium">Notepad</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Textarea
+                placeholder="Write a new note..."
+                value={newNoteContent}
+                onChange={(e) => setNewNoteContent(e.target.value)}
+                className="min-h-[100px]"
+              />
+              <div className="flex justify-end">
+                <Button
+                  onClick={handleNewNoteSave}
+                  disabled={isSaving || !newNoteContent.trim()}
+                >
+                  {isSaving ? "Saving..." : "Save Note"}
+                </Button>
+              </div>
+            </div>
+            <Separator />
+            <div className="space-y-4">
+              <h2 className="text-xs font-medium uppercase text-muted-foreground">
+                Recent Notes
+              </h2>
+              {notes.length === 0 ? (
+                <p className="text-center text-muted-foreground">
+                  No notes yet. Create your first note above!
+                </p>
+              ) : (
+                <ul className="space-y-2">
+                  {notes.map((note, index) => (
+                    <li
+                      key={note.id}
+                      className="p-1 flex gap-3 items-center justify-between text-sm cursor-pointer hover:bg-accent transition-colors rounded"
+                      onClick={() => openNoteInDrawer(note)}
+                    >
+                      <p className="line-clamp-1">{note.content}</p>
+                      <p className="text-xs text-muted-foreground whitespace-nowrap">
+                        {formatDistanceToNow(new Date(note.created_at), {
+                          addSuffix: true,
+                        })}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+        </CardContent>
       </Card>
-
-      <div className="space-y-4">
-        <h2 className="text-2xl font-semibold">Recent Notes</h2>
-        {notes.length === 0 ? (
-          <Card className="p-4 text-center text-muted-foreground">
-            No notes yet. Create your first note above!
-          </Card>
-        ) : (
-          notes.map((note) => (
-            <Card
-              key={note.id}
-              className="p-4 cursor-pointer hover:bg-accent transition-colors"
-              onClick={() => openNoteInDrawer(note)}
-            >
-              <p className="line-clamp-2">{note.content}</p>
-              <p className="text-sm text-muted-foreground mt-2">
-                Last updated: {new Date(note.updated_at).toLocaleDateString()}
-              </p>
-            </Card>
-          ))
-        )}
-      </div>
 
       <Drawer open={isDrawerOpen} onOpenChange={setIsDrawerOpen}>
         <DrawerContent>
