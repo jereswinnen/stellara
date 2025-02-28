@@ -2,9 +2,9 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/providers/auth-provider";
 import { DateTime } from "@/components/modules/DateTime";
 import { Notes } from "@/components/modules/Notes";
-import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
