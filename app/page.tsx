@@ -6,6 +6,7 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { DateTime } from "@/components/widgets/DateTime";
 import { Notes } from "@/components/widgets/Notes";
 import { PokemonOfTheDay } from "@/components/widgets/PokemonOfTheDay";
+import { OnThisDay } from "@/components/widgets/OnThisDay";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
@@ -55,6 +56,11 @@ export default function Home() {
         {/* PokemonOfTheDay Module */}
         <div className="lg:col-span-2 md:row-span-2">
           <PokemonOfTheDay />
+        </div>
+
+        {/* OnThisDay Module */}
+        <div className="col-span-full">
+          <OnThisDay />
         </div>
 
         {/* Notes Module */}
