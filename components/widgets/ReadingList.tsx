@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { supabase, ReadingListItem } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,8 @@ export function ReadingList() {
   const { user } = useAuth();
   const [books, setBooks] = useState<ReadingListItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const initialFetchDone = useRef(false);
+  const userIdRef = useRef<string | null>(null);
   const [newBook, setNewBook] = useState({
     book_title: "",
     author: "",
@@ -65,8 +67,10 @@ export function ReadingList() {
   };
 
   useEffect(() => {
-    if (user) {
+    if (user && (!initialFetchDone.current || userIdRef.current !== user.id)) {
+      userIdRef.current = user.id;
       fetchBooks();
+      initialFetchDone.current = true;
     }
   }, [user]);
 
