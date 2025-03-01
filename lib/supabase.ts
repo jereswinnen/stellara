@@ -34,6 +34,8 @@ export type ReadingListItem = {
   book_cover_url?: string;
   started_reading_date?: string;
   finished_reading_date?: string;
+  status: "Backlog" | "Reading" | "Finished" | "Abandoned";
+  rating?: number;
   created_at: string;
   user_id: string;
 };

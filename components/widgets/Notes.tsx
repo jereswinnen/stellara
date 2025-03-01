@@ -151,7 +151,7 @@ export function Notes() {
     <div className="space-y-4">
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg font-medium">Notepad</CardTitle>
+          <CardTitle className="text-lg font-bold">Notepad</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
@@ -164,7 +164,6 @@ export function Notes() {
               />
               <div className="flex justify-end">
                 <Button
-                  className="cursor-pointer"
                   onClick={handleNewNoteSave}
                   disabled={isSaving || !newNoteContent.trim()}
                 >
@@ -222,9 +221,7 @@ export function Notes() {
               onOpenChange={setIsDeleteDialogOpen}
             >
               <DialogTrigger asChild>
-                <Button className="cursor-pointer" variant="destructive">
-                  Delete Note
-                </Button>
+                <Button variant="destructive">Delete Note</Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
@@ -236,17 +233,12 @@ export function Notes() {
                 </DialogHeader>
                 <DialogFooter>
                   <Button
-                    className="cursor-pointer"
                     variant="outline"
                     onClick={() => setIsDeleteDialogOpen(false)}
                   >
                     Cancel
                   </Button>
-                  <Button
-                    className="cursor-pointer"
-                    variant="destructive"
-                    onClick={handleDeleteNote}
-                  >
+                  <Button variant="destructive" onClick={handleDeleteNote}>
                     Delete
                   </Button>
                 </DialogFooter>
@@ -254,15 +246,9 @@ export function Notes() {
             </Dialog>
             <div className="flex gap-2">
               <DrawerClose asChild>
-                <Button className="cursor-pointer" variant="outline">
-                  Cancel
-                </Button>
+                <Button variant="outline">Cancel</Button>
               </DrawerClose>
-              <Button
-                className="cursor-pointer"
-                onClick={handleEditNoteSave}
-                disabled={isSaving}
-              >
+              <Button onClick={handleEditNoteSave} disabled={isSaving}>
                 {isSaving ? "Saving..." : "Save Changes"}
               </Button>
             </div>

@@ -58,16 +58,14 @@ export function PokemonOfTheDay() {
   return (
     <Card className="w-full h-full">
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-lg font-medium">
-          Pokémon of the Day
-        </CardTitle>
+        <CardTitle className="text-lg font-bold">Pokémon of the Day</CardTitle>
         {showRefreshButton && (
           <Button
             variant="outline"
             size="icon"
             onClick={() => loadPokemon(true)}
             disabled={isLoading && !isRefreshing}
-            className="cursor-pointer transition-all duration-200"
+            className="transition-all duration-200"
             title="Get random Pokémon"
           >
             <RefreshCw

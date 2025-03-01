@@ -15,10 +15,12 @@ DROP TABLE IF EXISTS users;
 
 -- Finally drop types
 DROP TYPE IF EXISTS user_role;
+DROP TYPE IF EXISTS book_status;
 
 -- Now create everything in the correct order
--- First create the type
+-- First create the types
 CREATE TYPE user_role AS ENUM ('user', 'admin');
+CREATE TYPE book_status AS ENUM ('Backlog', 'Reading', 'Finished', 'Abandoned');
 
 -- Create users table
 CREATE TABLE users (
@@ -48,6 +50,8 @@ CREATE TABLE reading_list (
     book_cover_url TEXT,
     started_reading_date TIMESTAMP WITH TIME ZONE,
     finished_reading_date TIMESTAMP WITH TIME ZONE,
+    status book_status DEFAULT 'Backlog',
+    rating INTEGER CHECK (rating >= 1 AND rating <= 5),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
     user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL
 );

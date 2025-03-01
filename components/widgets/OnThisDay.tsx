@@ -90,7 +90,7 @@ export function OnThisDay() {
     return (
       <Card className="w-full h-full">
         <CardHeader>
-          <CardTitle className="text-lg font-medium">
+          <CardTitle className="text-lg font-bold">
             On This Day in History
           </CardTitle>
         </CardHeader>
@@ -106,7 +106,7 @@ export function OnThisDay() {
   return (
     <Card className="w-full h-full">
       <CardHeader>
-        <CardTitle className="text-lg font-medium">
+        <CardTitle className="text-lg font-bold">
           On This Day in History
         </CardTitle>
       </CardHeader>
