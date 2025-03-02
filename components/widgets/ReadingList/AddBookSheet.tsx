@@ -38,11 +38,18 @@ import {
 
 interface AddBookSheetProps {
   onAddBook: (bookData: NewBookData) => Promise<boolean>;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function AddBookSheet({ onAddBook }: AddBookSheetProps) {
+export function AddBookSheet({
+  onAddBook,
+  isOpen,
+  onOpenChange,
+}: AddBookSheetProps) {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const [newBook, setNewBook] = useState<NewBookData>({
     book_title: "",
     author: "",
@@ -57,6 +64,24 @@ export function AddBookSheet({ onAddBook }: AddBookSheetProps) {
   const [selectedBook, setSelectedBook] = useState<OpenLibraryBook | null>(
     null
   );
+
+  // Focus on search input when sheet opens
+  useEffect(() => {
+    const sheetOpen = isOpen !== undefined ? isOpen : isSheetOpen;
+
+    if (sheetOpen) {
+      // Use multiple attempts with increasing delays to ensure focus
+      const attempts = [100, 200, 300, 500];
+
+      attempts.forEach((delay) => {
+        setTimeout(() => {
+          if (searchInputRef.current) {
+            searchInputRef.current.focus();
+          }
+        }, delay);
+      });
+    }
+  }, [isOpen, isSheetOpen]);
 
   // Reset form when sheet is closed
   const resetForm = () => {
@@ -81,7 +106,14 @@ export function AddBookSheet({ onAddBook }: AddBookSheetProps) {
   // Handle sheet open/close
   const handleSheetOpenChange = (open: boolean) => {
     setIsSheetOpen(open);
-    if (!open) {
+    onOpenChange?.(open);
+
+    if (open) {
+      // Focus the search input when the sheet opens
+      setTimeout(() => {
+        searchInputRef.current?.focus();
+      }, 100);
+    } else {
       resetForm();
     }
   };
@@ -93,7 +125,7 @@ export function AddBookSheet({ onAddBook }: AddBookSheetProps) {
     const success = await onAddBook(newBook);
     if (success) {
       resetForm();
-      setIsSheetOpen(false);
+      // Let the parent component handle closing the sheet
     }
   };
 
@@ -163,17 +195,23 @@ export function AddBookSheet({ onAddBook }: AddBookSheetProps) {
     const success = await onAddBook(newBook);
     if (success) {
       resetForm();
-      setIsSheetOpen(false);
+      // Let the parent component handle closing the sheet
     }
   };
 
   return (
-    <Sheet open={isSheetOpen} onOpenChange={handleSheetOpenChange}>
-      <SheetTrigger asChild>
-        <Button size="sm" className="h-8 w-8 p-0">
-          <PlusIcon className="h-4 w-4" />
-        </Button>
-      </SheetTrigger>
+    <Sheet
+      open={isOpen !== undefined ? isOpen : isSheetOpen}
+      onOpenChange={handleSheetOpenChange}
+    >
+      {/* Only show the trigger button if isOpen is not provided externally */}
+      {isOpen === undefined && (
+        <SheetTrigger asChild>
+          <Button size="sm" className="h-8 w-8 p-0">
+            <PlusIcon className="h-4 w-4" />
+          </Button>
+        </SheetTrigger>
+      )}
       <SheetContent>
         <SheetHeader>
           <SheetTitle>Add a new book</SheetTitle>
@@ -191,6 +229,7 @@ export function AddBookSheet({ onAddBook }: AddBookSheetProps) {
           <TabsContent value="lookup" className="space-y-4 mt-4">
             <div className="flex gap-2">
               <Input
+                ref={searchInputRef}
                 placeholder="Search for a book title..."
                 value={searchQuery}
                 onChange={handleSearchInputChange}
@@ -199,6 +238,8 @@ export function AddBookSheet({ onAddBook }: AddBookSheetProps) {
                     handleBookSearch();
                   }
                 }}
+                tabIndex={0}
+                autoFocus
               />
               <Button
                 onClick={handleBookSearch}

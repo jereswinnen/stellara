@@ -1,22 +1,41 @@
 "use client";
 
-import { useAuth } from "@/components/providers/auth-provider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpenIcon } from "lucide-react";
-import { AddBookSheet } from "@/components/widgets/ReadingList/AddBookSheet";
+import { BookOpenIcon, PlusIcon } from "lucide-react";
 import { ViewBookSheet } from "@/components/widgets/ReadingList/ViewBookSheet";
 import { useReadingList } from "@/hooks/useReadingList";
+import {
+  useCommandMenu,
+  bookListEvents,
+} from "@/components/providers/command-menu-provider";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/components/providers/auth-provider";
+import { useEffect } from "react";
 
 export function ReadingList() {
   const { user } = useAuth();
-  const { loading, currentlyReadingBooks, addBook, updateBook, deleteBook } =
+  const { loading, currentlyReadingBooks, updateBook, deleteBook, fetchBooks } =
     useReadingList(user);
+  const { openAddBookSheet } = useCommandMenu();
+
+  // Listen for book list refresh events
+  useEffect(() => {
+    // Subscribe to book list refresh events
+    const unsubscribe = bookListEvents.subscribe(() => {
+      fetchBooks();
+    });
+
+    // Cleanup subscription on unmount
+    return unsubscribe;
+  }, [fetchBooks]);
 
   return (
     <Card className="h-full">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-xl font-bold">Reading List</CardTitle>
-        <AddBookSheet onAddBook={addBook} />
+        <Button size="sm" className="h-8 w-8 p-0" onClick={openAddBookSheet}>
+          <PlusIcon className="h-4 w-4" />
+        </Button>
       </CardHeader>
       <CardContent>
         {loading ? (
@@ -53,6 +72,21 @@ export function ReadingList() {
                       <p className="text-xs text-muted-foreground truncate">
                         {book.author}
                       </p>
+                      <p className="text-xs mt-1">
+                        <span
+                          className={`inline-block px-2 py-0.5 rounded-full text-xs ${
+                            book.status === "Reading"
+                              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
+                              : book.status === "Finished"
+                              ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100"
+                              : book.status === "Abandoned"
+                              ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100"
+                              : "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100"
+                          }`}
+                        >
+                          {book.status}
+                        </span>
+                      </p>
                     </div>
                   </div>
                 }
@@ -62,12 +96,15 @@ export function ReadingList() {
         ) : (
           <div className="flex flex-col items-center justify-center h-40 text-center">
             <BookOpenIcon className="h-8 w-8 text-muted-foreground mb-2" />
-            <p className="text-sm text-muted-foreground">
-              You don&apos;t have any books in your reading list.
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Click the + button to add a book.
-            </p>
+            <p className="text-muted-foreground">No books in your list yet</p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-2"
+              onClick={openAddBookSheet}
+            >
+              Add your first book
+            </Button>
           </div>
         )}
       </CardContent>

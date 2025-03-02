@@ -2,6 +2,7 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { AuthProvider } from "@/components/providers/auth-provider";
+import { CommandMenuProvider } from "@/components/providers/command-menu-provider";
 import { Bricolage_Grotesque } from "next/font/google";
 
 const bricolageGrotesque = Bricolage_Grotesque({
@@ -30,7 +31,7 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            {children}
+            <CommandMenuProvider>{children}</CommandMenuProvider>
           </ThemeProvider>
         </AuthProvider>
       </body>

@@ -38,13 +38,22 @@ export default function Home() {
               Welcome back, {user.user_metadata.full_name || user.email}
             </p>
           </div>
-          <Button
-            className="cursor-pointer"
-            variant="outline"
-            onClick={() => signOut()}
-          >
-            Sign Out
-          </Button>
+          <div className="flex items-center gap-2">
+            <div className="text-xs text-muted-foreground bg-muted px-2 py-1 rounded hidden md:flex items-center">
+              Press
+              <kbd className="mx-1 px-1.5 py-0.5 bg-background border rounded">
+                ⌘K
+              </kbd>
+              for commands
+            </div>
+            <Button
+              className="cursor-pointer"
+              variant="outline"
+              onClick={() => signOut()}
+            >
+              Sign Out
+            </Button>
+          </div>
         </div>
       </header>
 
