@@ -8,6 +8,7 @@ import { Notes } from "@/components/widgets/Notes/Notes";
 import { PokemonOfTheDay } from "@/components/widgets/PokemonOfTheDay";
 import { OnThisDay } from "@/components/widgets/OnThisDay";
 import { ReadingList } from "@/components/widgets/ReadingList/ReadingList";
+import { Links } from "@/components/widgets/Links/Links";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
@@ -71,6 +72,11 @@ export default function Home() {
         {/* ReadingList Module */}
         <div className="col-span-full lg:col-span-2">
           <ReadingList />
+        </div>
+
+        {/* Links Module */}
+        <div className="col-span-full lg:col-span-2">
+          <Links />
         </div>
 
         {/* PokemonOfTheDay Module */}

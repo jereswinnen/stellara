@@ -81,6 +81,77 @@ export type Database = {
           rating?: number;
         };
       };
+      links: {
+        Row: {
+          id: string;
+          url: string;
+          title: string;
+          image: string | null;
+          tags: string[] | null;
+          is_favorite: boolean;
+          is_archive: boolean;
+          created_at: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          url: string;
+          title: string;
+          image?: string | null;
+          tags?: string[] | null;
+          is_favorite?: boolean;
+          is_archive?: boolean;
+          user_id: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          url?: string;
+          title?: string;
+          image?: string | null;
+          tags?: string[] | null;
+          is_favorite?: boolean;
+          is_archive?: boolean;
+          updated_at?: string;
+        };
+      };
+      articles: {
+        Row: {
+          id: string;
+          url: string;
+          title: string;
+          body: string | null;
+          image: string | null;
+          tags: string[] | null;
+          is_favorite: boolean;
+          is_archive: boolean;
+          created_at: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          url: string;
+          title: string;
+          body?: string | null;
+          image?: string | null;
+          tags?: string[] | null;
+          is_favorite?: boolean;
+          is_archive?: boolean;
+          user_id: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          url?: string;
+          title?: string;
+          body?: string | null;
+          image?: string | null;
+          tags?: string[] | null;
+          is_favorite?: boolean;
+          is_archive?: boolean;
+          updated_at?: string;
+        };
+      };
     };
     Enums: {
       user_role: "user" | "admin";

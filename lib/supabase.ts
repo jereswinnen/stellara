@@ -39,3 +39,30 @@ export type ReadingListItem = {
   created_at: string;
   user_id: string;
 };
+
+export type Link = {
+  id: string;
+  url: string;
+  title: string;
+  image?: string;
+  tags?: string[];
+  is_favorite: boolean;
+  is_archive: boolean;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+};
+
+export type Article = {
+  id: string;
+  url: string;
+  title: string;
+  body?: string;
+  image?: string;
+  tags?: string[];
+  is_favorite: boolean;
+  is_archive: boolean;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+};

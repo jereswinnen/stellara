@@ -17,10 +17,14 @@ import {
   CommandShortcut,
 } from "@/components/ui/command";
 import { AddBookSheet } from "@/components/widgets/ReadingList/AddBookSheet";
+import { AddLinkSheet } from "@/components/widgets/Links/AddLinkSheet";
 import { useReadingList } from "@/hooks/useReadingList";
-import { BookOpenIcon } from "lucide-react";
+import { useLinks } from "@/hooks/useLinks";
+import { BookOpenIcon, LinkIcon } from "lucide-react";
 import { NewBookData } from "@/hooks/useReadingList";
+import { NewLinkData } from "@/hooks/useLinks";
 import { useAuth } from "@/components/providers/auth-provider";
+import { linkEvents } from "@/components/widgets/Links/Links";
 
 // Create a simple event emitter for book list refresh
 export const bookListEvents = {
@@ -40,6 +44,7 @@ export const bookListEvents = {
 
 interface CommandMenuContextType {
   openAddBookSheet: () => void;
+  openAddLinkSheet: () => void;
 }
 
 const CommandMenuContext = createContext<CommandMenuContextType | undefined>(
@@ -61,8 +66,10 @@ export function CommandMenuProvider({
 }) {
   const [isCommandOpen, setIsCommandOpen] = useState(false);
   const [isAddBookSheetOpen, setIsAddBookSheetOpen] = useState(false);
+  const [isAddLinkSheetOpen, setIsAddLinkSheetOpen] = useState(false);
   const { user } = useAuth();
   const { addBook } = useReadingList(user);
+  const { addLink } = useLinks(user);
 
   // Set up keyboard shortcuts
   useEffect(() => {
@@ -78,6 +85,12 @@ export function CommandMenuProvider({
         e.preventDefault();
         openAddBookSheet();
       }
+
+      // Add link shortcut (⌘L)
+      if (e.key === "l" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        openAddLinkSheet();
+      }
     };
 
     document.addEventListener("keydown", handleKeyDown);
@@ -91,6 +104,16 @@ export function CommandMenuProvider({
     // Use a sequence of timeouts to ensure the sheet opens and input gets focused
     setTimeout(() => {
       setIsAddBookSheetOpen(true);
+    }, 50);
+  };
+
+  const openAddLinkSheet = () => {
+    // Close command menu first
+    setIsCommandOpen(false);
+
+    // Use a sequence of timeouts to ensure the sheet opens and input gets focused
+    setTimeout(() => {
+      setIsAddLinkSheetOpen(true);
     }, 50);
   };
 
@@ -112,8 +135,26 @@ export function CommandMenuProvider({
     [addBook]
   );
 
+  // Wrap addLink to handle sheet closing and notify listeners
+  const handleAddLink = useCallback(
+    async (linkData: NewLinkData) => {
+      const success = await addLink(linkData);
+
+      if (success) {
+        // Close the sheet after successful add
+        setIsAddLinkSheetOpen(false);
+
+        // Notify all components that need to refresh their link lists
+        linkEvents.emit();
+      }
+
+      return success;
+    },
+    [addLink]
+  );
+
   return (
-    <CommandMenuContext.Provider value={{ openAddBookSheet }}>
+    <CommandMenuContext.Provider value={{ openAddBookSheet, openAddLinkSheet }}>
       {children}
 
       {/* Command Dialog */}
@@ -127,6 +168,11 @@ export function CommandMenuProvider({
               Add Book
               <CommandShortcut>⌘B</CommandShortcut>
             </CommandItem>
+            <CommandItem onSelect={openAddLinkSheet}>
+              <LinkIcon className="mr-2 h-4 w-4" />
+              Add Link
+              <CommandShortcut>⌘L</CommandShortcut>
+            </CommandItem>
           </CommandGroup>
         </CommandList>
       </CommandDialog>
@@ -136,6 +182,13 @@ export function CommandMenuProvider({
         onAddBook={handleAddBook}
         isOpen={isAddBookSheetOpen}
         onOpenChange={setIsAddBookSheetOpen}
+      />
+
+      {/* AddLinkSheet */}
+      <AddLinkSheet
+        onAddLink={handleAddLink}
+        isOpen={isAddLinkSheetOpen}
+        onOpenChange={setIsAddLinkSheetOpen}
       />
     </CommandMenuContext.Provider>
   );

@@ -1,14 +1,28 @@
 -- First, drop triggers
-DO $$ BEGIN
+DO $$ 
+BEGIN
+    -- Try to drop trigger from auth.users table
     DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+    
+    -- Drop triggers from other tables
+    DROP TRIGGER IF EXISTS update_users_updated_at ON users;
+    DROP TRIGGER IF EXISTS update_notes_updated_at ON notes;
+    DROP TRIGGER IF EXISTS update_links_updated_at ON links;
+    DROP TRIGGER IF EXISTS update_articles_updated_at ON articles;
     EXCEPTION WHEN OTHERS THEN NULL;
 END $$;
 
 -- Then drop functions
-DROP FUNCTION IF EXISTS handle_new_user();
-DROP FUNCTION IF EXISTS update_updated_at_column();
+DO $$
+BEGIN
+    DROP FUNCTION IF EXISTS handle_new_user();
+    DROP FUNCTION IF EXISTS update_updated_at_column();
+    EXCEPTION WHEN OTHERS THEN NULL;
+END $$;
 
 -- Then drop tables (in correct order due to dependencies)
+DROP TABLE IF EXISTS links;
+DROP TABLE IF EXISTS articles;
 DROP TABLE IF EXISTS reading_list;
 DROP TABLE IF EXISTS notes;
 DROP TABLE IF EXISTS users;
@@ -53,6 +67,35 @@ CREATE TABLE reading_list (
     status book_status DEFAULT 'Backlog',
     rating INTEGER CHECK (rating >= 1 AND rating <= 5),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL
+);
+
+-- Create links table
+CREATE TABLE links (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    url TEXT NOT NULL,
+    title TEXT NOT NULL,
+    image TEXT,
+    tags TEXT[],
+    is_favorite BOOLEAN DEFAULT false,
+    is_archive BOOLEAN DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL
+);
+
+-- Create articles table
+CREATE TABLE articles (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    url TEXT NOT NULL,
+    title TEXT NOT NULL,
+    body TEXT,
+    image TEXT,
+    tags TEXT[],
+    is_favorite BOOLEAN DEFAULT false,
+    is_archive BOOLEAN DEFAULT false,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
     user_id UUID REFERENCES users(id) ON DELETE CASCADE NOT NULL
 );
 
@@ -103,25 +146,47 @@ END;
 $$;
 
 -- Create triggers
-CREATE TRIGGER update_users_updated_at
+CREATE OR REPLACE TRIGGER update_users_updated_at
     BEFORE UPDATE ON users
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER update_notes_updated_at
+CREATE OR REPLACE TRIGGER update_notes_updated_at
     BEFORE UPDATE ON notes
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
 
-CREATE TRIGGER on_auth_user_created
-    AFTER INSERT ON auth.users
+CREATE OR REPLACE TRIGGER update_links_updated_at
+    BEFORE UPDATE ON links
     FOR EACH ROW
-    EXECUTE FUNCTION handle_new_user();
+    EXECUTE FUNCTION update_updated_at_column();
+
+CREATE OR REPLACE TRIGGER update_articles_updated_at
+    BEFORE UPDATE ON articles
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_at_column();
+
+-- Note: PostgreSQL doesn't support OR REPLACE for triggers on other schemas
+-- So we need to handle this differently
+DO $$
+BEGIN
+    -- First try to drop the trigger if it exists
+    DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+    -- Then create it
+    CREATE TRIGGER on_auth_user_created
+        AFTER INSERT ON auth.users
+        FOR EACH ROW
+        EXECUTE FUNCTION handle_new_user();
+    EXCEPTION WHEN OTHERS THEN
+        RAISE NOTICE 'Could not create trigger on_auth_user_created: %', SQLERRM;
+END $$;
 
 -- Enable RLS
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE reading_list ENABLE ROW LEVEL SECURITY;
+ALTER TABLE links ENABLE ROW LEVEL SECURITY;
+ALTER TABLE articles ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for users
 CREATE POLICY "Users can view their own profile"
@@ -168,6 +233,40 @@ CREATE POLICY "Users can update their own reading list entries"
 
 CREATE POLICY "Users can delete their own reading list entries"
     ON reading_list FOR DELETE
+    USING (auth.uid() = user_id);
+
+-- Create policies for links
+CREATE POLICY "Users can view their own links"
+    ON links FOR SELECT
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can create their own links"
+    ON links FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own links"
+    ON links FOR UPDATE
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own links"
+    ON links FOR DELETE
+    USING (auth.uid() = user_id);
+
+-- Create policies for articles
+CREATE POLICY "Users can view their own articles"
+    ON articles FOR SELECT
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can create their own articles"
+    ON articles FOR INSERT
+    WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update their own articles"
+    ON articles FOR UPDATE
+    USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can delete their own articles"
+    ON articles FOR DELETE
     USING (auth.uid() = user_id);
 
 -- Grant necessary permissions
