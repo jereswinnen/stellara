@@ -3,11 +3,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LinkIcon, PlusIcon, ExternalLinkIcon } from "lucide-react";
 import { AddLinkSheet } from "@/components/widgets/Links/AddLinkSheet";
+import { ViewLinkSheet } from "@/components/widgets/Links/ViewLinkSheet";
 import { useLinks } from "@/hooks/useLinks";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { Link } from "@/lib/supabase";
 
 // Create a simple event emitter for links refresh
 export const linkEvents = {
@@ -27,8 +29,11 @@ export const linkEvents = {
 
 export function Links() {
   const { user } = useAuth();
-  const { loading, recentLinks, addLink, fetchLinks } = useLinks(user);
+  const { loading, recentLinks, addLink, updateLink, deleteLink, fetchLinks } =
+    useLinks(user);
   const [isAddLinkOpen, setIsAddLinkOpen] = useState(false);
+  const [selectedLink, setSelectedLink] = useState<Link | null>(null);
+  const [isViewLinkOpen, setIsViewLinkOpen] = useState(false);
 
   // Listen for link list refresh events
   useEffect(() => {
@@ -56,6 +61,42 @@ export function Links() {
     return success;
   };
 
+  // Handle updating a link
+  const handleUpdateLink = async (linkData: any) => {
+    const success = await updateLink(linkData);
+
+    if (success) {
+      // Notify all components that need to refresh their link lists
+      linkEvents.emit();
+
+      // Close the sheet after successful update
+      setIsViewLinkOpen(false);
+    }
+
+    return success;
+  };
+
+  // Handle deleting a link
+  const handleDeleteLink = async (linkId: string) => {
+    const success = await deleteLink(linkId);
+
+    if (success) {
+      // Notify all components that need to refresh their link lists
+      linkEvents.emit();
+
+      // Close the sheet after successful delete
+      setIsViewLinkOpen(false);
+    }
+
+    return success;
+  };
+
+  // Open the view link sheet
+  const openViewLinkSheet = (link: Link) => {
+    setSelectedLink(link);
+    setIsViewLinkOpen(true);
+  };
+
   return (
     <Card className="h-full">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -76,12 +117,10 @@ export function Links() {
         ) : recentLinks.length > 0 ? (
           <div className="space-y-3">
             {recentLinks.map((link) => (
-              <a
+              <div
                 key={link.id}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-start space-x-3 border rounded-lg p-3 hover:bg-accent/50 transition-colors"
+                className="flex items-start space-x-3 border rounded-lg p-3 hover:bg-accent/50 transition-colors cursor-pointer"
+                onClick={() => openViewLinkSheet(link)}
               >
                 <div className="flex-shrink-0 mt-1">
                   {link.image ? (
@@ -101,7 +140,15 @@ export function Links() {
                     <p className="text-sm font-medium line-clamp-1">
                       {link.title}
                     </p>
-                    <ExternalLinkIcon className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
+                    <a
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex-shrink-0"
+                    >
+                      <ExternalLinkIcon className="h-4 w-4 text-muted-foreground" />
+                    </a>
                   </div>
                   <p className="text-xs text-muted-foreground truncate">
                     {link.url}
@@ -120,7 +167,7 @@ export function Links() {
                     </div>
                   )}
                 </div>
-              </a>
+              </div>
             ))}
           </div>
         ) : (
@@ -145,6 +192,17 @@ export function Links() {
           isOpen={isAddLinkOpen}
           onOpenChange={setIsAddLinkOpen}
         />
+
+        {/* ViewLinkSheet - only render when a link is selected */}
+        {selectedLink && (
+          <ViewLinkSheet
+            link={selectedLink}
+            onUpdateLink={handleUpdateLink}
+            onDeleteLink={handleDeleteLink}
+            isOpen={isViewLinkOpen}
+            onOpenChange={setIsViewLinkOpen}
+          />
+        )}
       </CardContent>
     </Card>
   );

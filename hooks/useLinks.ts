@@ -169,6 +169,6 @@ export function useLinks(user: User | null) {
     addLink,
     updateLink,
     deleteLink,
-    recentLinks: links.slice(0, 5), // Get the 5 most recent links
+    recentLinks: links.filter((link) => !link.is_archive).slice(0, 5), // Get the 5 most recent non-archived links
   };
 }
