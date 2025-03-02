@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/lib/supabase";
 import type { Note } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
@@ -15,13 +15,16 @@ export interface UpdateNoteData {
 export function useNotes(user: User | null) {
   const [notes, setNotes] = useState<Note[]>([]);
   const [loading, setLoading] = useState(true);
+  const initialized = useRef(false);
 
   useEffect(() => {
-    if (user) {
+    if (user && !initialized.current) {
       fetchNotes();
-    } else {
+      initialized.current = true;
+    } else if (!user) {
       setNotes([]);
       setLoading(false);
+      initialized.current = false;
     }
   }, [user]);
 
