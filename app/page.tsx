@@ -7,7 +7,7 @@ import { DateTime } from "@/components/widgets/DateTime";
 import { Notes } from "@/components/widgets/Notes";
 import { PokemonOfTheDay } from "@/components/widgets/PokemonOfTheDay";
 import { OnThisDay } from "@/components/widgets/OnThisDay";
-import { ReadingList } from "@/components/widgets/ReadingList";
+import { ReadingList } from "@/components/widgets/ReadingList/ReadingList";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
