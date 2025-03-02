@@ -4,11 +4,13 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpenIcon } from "lucide-react";
 import { AddBookSheet } from "@/components/widgets/ReadingList/AddBookSheet";
+import { ViewBookSheet } from "@/components/widgets/ReadingList/ViewBookSheet";
 import { useReadingList } from "@/hooks/useReadingList";
 
 export function ReadingList() {
   const { user } = useAuth();
-  const { loading, currentlyReadingBooks, addBook } = useReadingList(user);
+  const { loading, currentlyReadingBooks, addBook, updateBook, deleteBook } =
+    useReadingList(user);
 
   return (
     <Card className="h-full">
@@ -26,32 +28,37 @@ export function ReadingList() {
             <h3 className="text-sm font-medium">Currently Reading</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {currentlyReadingBooks.map((book) => (
-                <div
+                <ViewBookSheet
                   key={book.id}
-                  className="flex items-center space-x-4 border rounded-lg p-3"
-                >
-                  <div className="flex-shrink-0">
-                    {book.book_cover_url ? (
-                      <img
-                        src={book.book_cover_url}
-                        alt={book.book_title}
-                        className="h-16 w-12 object-cover rounded"
-                      />
-                    ) : (
-                      <div className="h-16 w-12 bg-muted flex items-center justify-center rounded">
-                        <BookOpenIcon className="h-6 w-6 text-muted-foreground" />
+                  book={book}
+                  onUpdateBook={updateBook}
+                  onDeleteBook={deleteBook}
+                  trigger={
+                    <div className="flex items-center space-x-4 border rounded-lg p-3 cursor-pointer hover:bg-accent/50 transition-colors">
+                      <div className="flex-shrink-0">
+                        {book.book_cover_url ? (
+                          <img
+                            src={book.book_cover_url}
+                            alt={book.book_title}
+                            className="h-16 w-12 object-cover rounded"
+                          />
+                        ) : (
+                          <div className="h-16 w-12 bg-muted flex items-center justify-center rounded">
+                            <BookOpenIcon className="h-6 w-6 text-muted-foreground" />
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">
-                      {book.book_title}
-                    </p>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {book.author}
-                    </p>
-                  </div>
-                </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">
+                          {book.book_title}
+                        </p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {book.author}
+                        </p>
+                      </div>
+                    </div>
+                  }
+                />
               ))}
             </div>
           </div>

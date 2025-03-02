@@ -14,6 +14,15 @@ export interface NewBookData {
   rating?: number;
 }
 
+export interface UpdateBookData {
+  id: string;
+  book_title?: string;
+  author?: string;
+  book_cover_url?: string;
+  status?: BookStatus;
+  rating?: number;
+}
+
 export function useReadingList(user: User | null) {
   const [books, setBooks] = useState<ReadingListItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -77,6 +86,107 @@ export function useReadingList(user: User | null) {
     }
   };
 
+  // Update an existing book in the reading list
+  const updateBook = async (bookData: UpdateBookData) => {
+    if (!user || !bookData.id) return false;
+
+    try {
+      const updates: any = {};
+
+      // Only include fields that are provided
+      if (bookData.book_title !== undefined)
+        updates.book_title = bookData.book_title;
+      if (bookData.author !== undefined) updates.author = bookData.author;
+      if (bookData.book_cover_url !== undefined)
+        updates.book_cover_url = bookData.book_cover_url;
+      if (bookData.rating !== undefined) updates.rating = bookData.rating;
+
+      // Handle status changes and update date fields accordingly
+      if (bookData.status !== undefined) {
+        updates.status = bookData.status;
+
+        // Get the current book to check previous status
+        const { data: currentBook } = await supabase
+          .from("reading_list")
+          .select("status")
+          .eq("id", bookData.id)
+          .single();
+
+        // Update started_reading_date if status changed to Reading
+        if (
+          bookData.status === "Reading" &&
+          currentBook?.status !== "Reading"
+        ) {
+          updates.started_reading_date = new Date().toISOString();
+        }
+
+        // Update finished_reading_date if status changed to Finished
+        if (
+          bookData.status === "Finished" &&
+          currentBook?.status !== "Finished"
+        ) {
+          updates.finished_reading_date = new Date().toISOString();
+        }
+
+        // Clear dates if moving back from Reading or Finished
+        if (
+          bookData.status !== "Reading" &&
+          currentBook?.status === "Reading"
+        ) {
+          updates.started_reading_date = null;
+        }
+
+        if (
+          bookData.status !== "Finished" &&
+          currentBook?.status === "Finished"
+        ) {
+          updates.finished_reading_date = null;
+        }
+      }
+
+      const { error } = await supabase
+        .from("reading_list")
+        .update(updates)
+        .eq("id", bookData.id)
+        .eq("user_id", user.id);
+
+      if (error) {
+        console.error("Error updating book:", error);
+        return false;
+      }
+
+      await fetchBooks();
+      return true;
+    } catch (error) {
+      console.error("Error updating book:", error);
+      return false;
+    }
+  };
+
+  // Delete a book from the reading list
+  const deleteBook = async (bookId: string) => {
+    if (!user) return false;
+
+    try {
+      const { error } = await supabase
+        .from("reading_list")
+        .delete()
+        .eq("id", bookId)
+        .eq("user_id", user.id);
+
+      if (error) {
+        console.error("Error deleting book:", error);
+        return false;
+      }
+
+      await fetchBooks();
+      return true;
+    } catch (error) {
+      console.error("Error deleting book:", error);
+      return false;
+    }
+  };
+
   // Get books with a specific status
   const getBooksByStatus = (status: BookStatus) => {
     return books.filter((book) => book.status === status);
@@ -96,6 +206,8 @@ export function useReadingList(user: User | null) {
     loading,
     fetchBooks,
     addBook,
+    updateBook,
+    deleteBook,
     getBooksByStatus,
     currentlyReadingBooks: getBooksByStatus("Reading"),
   };

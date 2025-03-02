@@ -21,7 +21,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { PlusIcon, BookOpenIcon, SearchIcon, Loader2 } from "lucide-react";
+import {
+  PlusIcon,
+  BookOpenIcon,
+  SearchIcon,
+  Loader2,
+  CircleCheckBig,
+} from "lucide-react";
 import { BookStatus, NewBookData } from "@/hooks/useReadingList";
 import {
   OpenLibraryBook,
@@ -257,8 +263,8 @@ export function AddBookSheet({ onAddBook }: AddBookSheetProps) {
               </div>
             ) : searchQuery && !isSearching ? (
               <div className="flex flex-col items-center justify-center py-8 text-center">
-                <p className="text-sm text-muted-foreground">
-                  No books found for "{searchQuery}"
+                <p className="text-sm">
+                  No books found for <b>"{searchQuery}"</b>
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
                   Try a different search term or add the book manually.
@@ -317,9 +323,10 @@ export function AddBookSheet({ onAddBook }: AddBookSheetProps) {
                   </Select>
                 </div>
 
-                <SheetFooter>
+                <SheetFooter className="p-0">
                   <Button onClick={handleAddSelectedBook}>
-                    Add to Reading List
+                    <CircleCheckBig className="h-4 w-4" />
+                    Add Book
                   </Button>
                 </SheetFooter>
               </div>
@@ -411,11 +418,12 @@ export function AddBookSheet({ onAddBook }: AddBookSheetProps) {
               </div>
             </div>
 
-            <SheetFooter>
+            <SheetFooter className="p-0">
               <Button
                 onClick={handleAddBook}
                 disabled={!newBook.book_title || !newBook.author}
               >
+                <CircleCheckBig className="h-4 w-4" />
                 Add Book
               </Button>
             </SheetFooter>
