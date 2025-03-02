@@ -48,6 +48,9 @@ export function Links() {
     if (success) {
       // Notify all components that need to refresh their link lists
       linkEvents.emit();
+
+      // Close the sheet after successful add
+      setIsAddLinkOpen(false);
     }
 
     return success;
@@ -57,7 +60,13 @@ export function Links() {
     <Card className="h-full">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-xl font-bold">Links</CardTitle>
-        <AddLinkSheet onAddLink={handleAddLink} />
+        <Button
+          size="sm"
+          className="h-8 w-8 p-0"
+          onClick={() => setIsAddLinkOpen(true)}
+        >
+          <PlusIcon className="h-4 w-4" />
+        </Button>
       </CardHeader>
       <CardContent>
         {loading ? (
@@ -127,13 +136,15 @@ export function Links() {
               <PlusIcon className="mr-1 h-4 w-4" />
               Add your first link
             </Button>
-            <AddLinkSheet
-              onAddLink={handleAddLink}
-              isOpen={isAddLinkOpen}
-              onOpenChange={setIsAddLinkOpen}
-            />
           </div>
         )}
+
+        {/* AddLinkSheet - always render it once, controlled by isAddLinkOpen */}
+        <AddLinkSheet
+          onAddLink={handleAddLink}
+          isOpen={isAddLinkOpen}
+          onOpenChange={setIsAddLinkOpen}
+        />
       </CardContent>
     </Card>
   );
