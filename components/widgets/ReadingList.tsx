@@ -43,6 +43,8 @@ export function ReadingList() {
   const [loading, setLoading] = useState(true);
   const initialFetchDone = useRef(false);
   const userIdRef = useRef<string | null>(null);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [newBook, setNewBook] = useState({
     book_title: "",
     author: "",
@@ -91,6 +93,34 @@ export function ReadingList() {
     }
   }, [user]);
 
+  // Reset form when sheet is closed
+  const resetForm = () => {
+    setNewBook({
+      book_title: "",
+      author: "",
+      book_cover_url: "",
+      status: "Backlog" as BookStatus,
+      rating: undefined,
+    });
+    setSearchQuery("");
+    setSearchResults([]);
+    setSelectedBook(null);
+
+    // Clear any pending search timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+      searchTimeoutRef.current = null;
+    }
+  };
+
+  // Handle sheet open/close
+  const handleSheetOpenChange = (open: boolean) => {
+    setIsSheetOpen(open);
+    if (!open) {
+      resetForm();
+    }
+  };
+
   const handleAddBook = async () => {
     if (!user) return;
     if (!newBook.book_title || !newBook.author) return;
@@ -115,13 +145,8 @@ export function ReadingList() {
       }
 
       // Reset form and refresh books
-      setNewBook({
-        book_title: "",
-        author: "",
-        book_cover_url: "",
-        status: "Backlog" as BookStatus,
-        rating: undefined,
-      });
+      resetForm();
+      setIsSheetOpen(false);
       fetchBooks();
     } catch (error) {
       console.error("Error adding book:", error);
@@ -129,10 +154,12 @@ export function ReadingList() {
   };
 
   const searchBooks = async () => {
-    if (!searchQuery.trim()) return;
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
 
     setIsSearching(true);
-    setSearchResults([]);
     setSelectedBook(null);
 
     try {
@@ -154,6 +181,37 @@ export function ReadingList() {
       setIsSearching(false);
     }
   };
+
+  // Auto-search with debounce
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+
+    // Clear any existing timeout
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    // Don't search if the query is empty
+    if (!value.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    // Set a new timeout for the search
+    searchTimeoutRef.current = setTimeout(() => {
+      searchBooks();
+    }, 500); // 500ms debounce
+  };
+
+  // Clean up timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
 
   const handleSelectBook = (book: OpenLibraryBook) => {
     setSelectedBook(book);
@@ -193,16 +251,8 @@ export function ReadingList() {
       }
 
       // Reset form and refresh books
-      setNewBook({
-        book_title: "",
-        author: "",
-        book_cover_url: "",
-        status: "Backlog" as BookStatus,
-        rating: undefined,
-      });
-      setSearchQuery("");
-      setSearchResults([]);
-      setSelectedBook(null);
+      resetForm();
+      setIsSheetOpen(false);
       fetchBooks();
     } catch (error) {
       console.error("Error adding book:", error);
@@ -217,7 +267,7 @@ export function ReadingList() {
     <Card className="h-full">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-xl font-bold">Reading List</CardTitle>
-        <Sheet>
+        <Sheet open={isSheetOpen} onOpenChange={handleSheetOpenChange}>
           <SheetTrigger asChild>
             <Button size="sm" className="h-8 w-8 p-0">
               <PlusIcon className="h-4 w-4" />
@@ -231,7 +281,7 @@ export function ReadingList() {
               </SheetDescription>
             </SheetHeader>
 
-            <Tabs defaultValue="lookup" className="px-4 mt-6">
+            <Tabs defaultValue="lookup" className="px-4">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="lookup">Lookup</TabsTrigger>
                 <TabsTrigger value="manual">Manual</TabsTrigger>
@@ -242,7 +292,7 @@ export function ReadingList() {
                   <Input
                     placeholder="Search for a book title..."
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={handleSearchInputChange}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         searchBooks();
@@ -373,11 +423,9 @@ export function ReadingList() {
                     </div>
 
                     <SheetFooter>
-                      <SheetClose asChild>
-                        <Button onClick={handleAddSelectedBook}>
-                          Add to Reading List
-                        </Button>
-                      </SheetClose>
+                      <Button onClick={handleAddSelectedBook}>
+                        Add to Reading List
+                      </Button>
                     </SheetFooter>
                   </div>
                 )}
@@ -469,14 +517,12 @@ export function ReadingList() {
                 </div>
 
                 <SheetFooter>
-                  <SheetClose asChild>
-                    <Button
-                      onClick={handleAddBook}
-                      disabled={!newBook.book_title || !newBook.author}
-                    >
-                      Add Book
-                    </Button>
-                  </SheetClose>
+                  <Button
+                    onClick={handleAddBook}
+                    disabled={!newBook.book_title || !newBook.author}
+                  >
+                    Add Book
+                  </Button>
                 </SheetFooter>
               </TabsContent>
             </Tabs>
