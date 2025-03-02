@@ -10,6 +10,9 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@/lib/supabase";
+import { TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip } from "@/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 // Create a simple event emitter for links refresh
 export const linkEvents = {
@@ -140,15 +143,24 @@ export function Links() {
                     <p className="text-sm font-medium line-clamp-1">
                       {link.title}
                     </p>
-                    <a
-                      href={link.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="flex-shrink-0"
-                    >
-                      <ExternalLinkIcon className="h-4 w-4 text-muted-foreground" />
-                    </a>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <a
+                            href={link.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="flex-shrink-0"
+                          >
+                            <ExternalLinkIcon className="h-4 w-4 text-muted-foreground" />
+                          </a>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Open link</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
                   <p className="text-xs text-muted-foreground truncate">
                     {link.url}
