@@ -48,10 +48,20 @@ export default function Home() {
         </div>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* DateTime Module */}
         <div className="lg:col-span-1">
           <DateTime />
+        </div>
+
+        {/* Notes Module */}
+        <div className="lg:col-span-3">
+          <Notes />
+        </div>
+
+        {/* ReadingList Module */}
+        <div className="col-span-full lg:col-span-2">
+          <ReadingList />
         </div>
 
         {/* PokemonOfTheDay Module */}
@@ -59,19 +69,9 @@ export default function Home() {
           <PokemonOfTheDay />
         </div>
 
-        {/* ReadingList Module */}
-        <div className="col-span-full">
-          <ReadingList />
-        </div>
-
         {/* OnThisDay Module */}
         <div className="col-span-full">
           <OnThisDay />
-        </div>
-
-        {/* Notes Module */}
-        <div className="col-span-full">
-          <Notes />
         </div>
       </div>
     </div>
