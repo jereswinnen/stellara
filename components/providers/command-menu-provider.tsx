@@ -22,13 +22,20 @@ import { AddArticleSheet } from "@/components/widgets/Articles/AddArticleSheet";
 import { useBooks } from "@/hooks/useBooks";
 import { useLinks } from "@/hooks/useLinks";
 import { useArticles } from "@/hooks/useArticles";
-import { BookOpenIcon, LinkIcon, FileTextIcon } from "lucide-react";
+import {
+  BookOpenIcon,
+  LinkIcon,
+  FileTextIcon,
+  LayoutDashboardIcon,
+  StickyNoteIcon,
+} from "lucide-react";
 import { NewBookData } from "@/hooks/useBooks";
 import { NewLinkData } from "@/hooks/useLinks";
 import { NewArticleData } from "@/hooks/useArticles";
 import { useAuth } from "@/components/providers/auth-provider";
 import { linkEvents } from "@/components/widgets/Links/Links";
 import { articleEvents } from "@/components/widgets/Articles/Articles";
+import { useRouter } from "next/navigation";
 
 // Create a simple event emitter for book list refresh
 export const bookListEvents = {
@@ -77,6 +84,7 @@ export function CommandMenuProvider({
   const { addBook } = useBooks(user);
   const { addLink } = useLinks(user);
   const { addArticle } = useArticles(user);
+  const router = useRouter();
 
   // Set up keyboard shortcuts
   useEffect(() => {
@@ -194,6 +202,12 @@ export function CommandMenuProvider({
     [addArticle]
   );
 
+  // Navigation functions
+  const navigateTo = (path: string) => {
+    setIsCommandOpen(false);
+    router.push(path);
+  };
+
   return (
     <CommandMenuContext.Provider
       value={{ openAddBookSheet, openAddLinkSheet, openAddArticleSheet }}
@@ -205,6 +219,30 @@ export function CommandMenuProvider({
         <CommandInput placeholder="Type a command or search..." />
         <CommandList>
           <CommandEmpty>No results found.</CommandEmpty>
+
+          <CommandGroup heading="Navigation">
+            <CommandItem onSelect={() => navigateTo("/")}>
+              <LayoutDashboardIcon className="h-4 w-4" />
+              Dashboard
+            </CommandItem>
+            <CommandItem onSelect={() => navigateTo("/articles")}>
+              <FileTextIcon className="h-4 w-4" />
+              Articles
+            </CommandItem>
+            <CommandItem onSelect={() => navigateTo("/books")}>
+              <BookOpenIcon className="h-4 w-4" />
+              Books
+            </CommandItem>
+            <CommandItem onSelect={() => navigateTo("/links")}>
+              <LinkIcon className="h-4 w-4" />
+              Links
+            </CommandItem>
+            <CommandItem onSelect={() => navigateTo("/notes")}>
+              <StickyNoteIcon className="h-4 w-4" />
+              Notes
+            </CommandItem>
+          </CommandGroup>
+
           <CommandGroup heading="Actions">
             <CommandItem onSelect={openAddBookSheet}>
               <BookOpenIcon className="h-4 w-4" />
