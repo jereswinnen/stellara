@@ -177,12 +177,12 @@ export function AddNoteSheet({
 
           <div className="grid gap-2">
             <Label htmlFor="tags">Tags</Label>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
               <Input
                 id="tags"
                 value={newTag}
                 onChange={(e) => setNewTag(e.target.value)}
-                placeholder="Add tags"
+                placeholder="Add a tag"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
@@ -192,11 +192,11 @@ export function AddNoteSheet({
               />
               <Button
                 type="button"
-                variant="outline"
-                size="icon"
+                size="sm"
                 onClick={handleAddTag}
+                disabled={isLoading || !newTag.trim()}
               >
-                <PlusIcon className="h-4 w-4" />
+                Add
               </Button>
             </div>
             {newNote.tags.length > 0 && (

@@ -32,18 +32,21 @@ export type Database = {
         Row: {
           id: string;
           content: string;
+          tags: string[] | null;
           created_at: string;
           updated_at: string;
           user_id: string;
         };
         Insert: {
           content: string;
+          tags?: string[] | null;
           user_id: string;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           content?: string;
+          tags?: string[] | null;
           updated_at?: string;
         };
       };

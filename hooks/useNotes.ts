@@ -5,11 +5,13 @@ import { User } from "@supabase/supabase-js";
 
 export interface CreateNoteData {
   content: string;
+  tags?: string[];
 }
 
 export interface UpdateNoteData {
   id: string;
   content: string;
+  tags?: string[];
 }
 
 export function useNotes(user: User | null) {
@@ -55,6 +57,7 @@ export function useNotes(user: User | null) {
       const { error } = await supabase.from("notes").insert([
         {
           content: noteData.content,
+          tags: noteData.tags || null,
           user_id: user.id,
         },
       ]);
@@ -74,16 +77,24 @@ export function useNotes(user: User | null) {
         throw new Error("You must be logged in to update notes");
       }
 
+      const updates: any = {};
+
+      // Only include fields that are provided
+      if (noteData.content !== undefined) updates.content = noteData.content;
+      if (noteData.tags !== undefined) updates.tags = noteData.tags;
+      updates.updated_at = new Date().toISOString();
+
       const { error } = await supabase
         .from("notes")
-        .update({
-          content: noteData.content,
-          updated_at: new Date().toISOString(),
-        })
+        .update(updates)
         .eq("id", noteData.id)
         .eq("user_id", user.id);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error updating note:", error);
+        throw error;
+      }
+
       await fetchNotes();
       return true;
     } catch (error) {

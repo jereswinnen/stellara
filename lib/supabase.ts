@@ -22,6 +22,7 @@ export const supabase = createClient<Database>(
 export type Note = {
   id: string;
   content: string;
+  tags?: string[];
   created_at: string;
   updated_at: string;
   user_id: string;

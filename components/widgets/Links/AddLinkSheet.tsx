@@ -210,7 +210,7 @@ export function AddLinkSheet({
 
           <div className="space-y-2">
             <Label htmlFor="tags">Tags</Label>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
               <Input
                 id="tags"
                 placeholder="Add a tag"
