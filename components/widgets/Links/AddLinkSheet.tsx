@@ -257,7 +257,6 @@ export function AddLinkSheet({
           <Button
             onClick={handleAddLink}
             disabled={isLoading || !newLink.url || success}
-            className="w-full"
           >
             {isLoading ? (
               <>

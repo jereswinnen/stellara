@@ -389,7 +389,6 @@ export function AddBookSheet({
                   <Button
                     onClick={handleAddSelectedBook}
                     disabled={isLoading || !selectedBook || success}
-                    className="w-full"
                   >
                     {isLoading ? (
                       <>

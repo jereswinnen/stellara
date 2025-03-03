@@ -16,12 +16,14 @@ import {
   CommandItem,
   CommandShortcut,
 } from "@/components/ui/command";
+import { AddArticleSheet } from "@/components/widgets/Articles/AddArticleSheet";
 import { AddBookSheet } from "@/components/widgets/Books/AddBookSheet";
 import { AddLinkSheet } from "@/components/widgets/Links/AddLinkSheet";
-import { AddArticleSheet } from "@/components/widgets/Articles/AddArticleSheet";
+import { AddNoteSheet } from "@/components/widgets/Notes/AddNoteSheet";
+import { useArticles } from "@/hooks/useArticles";
 import { useBooks } from "@/hooks/useBooks";
 import { useLinks } from "@/hooks/useLinks";
-import { useArticles } from "@/hooks/useArticles";
+import { useNotes } from "@/hooks/useNotes";
 import {
   BookOpenIcon,
   LinkIcon,
@@ -53,10 +55,27 @@ export const bookListEvents = {
   },
 };
 
+// Create a simple event emitter for note list refresh
+export const noteListEvents = {
+  listeners: new Set<() => void>(),
+
+  subscribe(callback: () => void) {
+    this.listeners.add(callback);
+    return () => {
+      this.listeners.delete(callback);
+    };
+  },
+
+  emit() {
+    this.listeners.forEach((callback) => callback());
+  },
+};
+
 interface CommandMenuContextType {
+  openAddArticleSheet: () => void;
   openAddBookSheet: () => void;
   openAddLinkSheet: () => void;
-  openAddArticleSheet: () => void;
+  openAddNoteSheet: () => void;
 }
 
 const CommandMenuContext = createContext<CommandMenuContextType | undefined>(
@@ -77,13 +96,15 @@ export function CommandMenuProvider({
   children: React.ReactNode;
 }) {
   const [isCommandOpen, setIsCommandOpen] = useState(false);
+  const [isAddArticleSheetOpen, setIsAddArticleSheetOpen] = useState(false);
   const [isAddBookSheetOpen, setIsAddBookSheetOpen] = useState(false);
   const [isAddLinkSheetOpen, setIsAddLinkSheetOpen] = useState(false);
-  const [isAddArticleSheetOpen, setIsAddArticleSheetOpen] = useState(false);
+  const [isAddNoteSheetOpen, setIsAddNoteSheetOpen] = useState(false);
   const { user } = useAuth();
+  const { addArticle } = useArticles(user);
   const { addBook } = useBooks(user);
   const { addLink } = useLinks(user);
-  const { addArticle } = useArticles(user);
+  const { createNote } = useNotes(user);
   const router = useRouter();
 
   // Set up keyboard shortcuts
@@ -93,6 +114,12 @@ export function CommandMenuProvider({
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         setIsCommandOpen((open) => !open);
+      }
+
+      // Add article shortcut (⌘A)
+      if (e.key === "a" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        openAddArticleSheet();
       }
 
       // Add book shortcut (⌘B)
@@ -107,16 +134,26 @@ export function CommandMenuProvider({
         openAddLinkSheet();
       }
 
-      // Add article shortcut (⌘A)
-      if (e.key === "a" && (e.metaKey || e.ctrlKey)) {
+      // Add note shortcut (⌘N)
+      if (e.key === "n" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
-        openAddArticleSheet();
+        openAddNoteSheet();
       }
     };
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
+
+  const openAddArticleSheet = () => {
+    // Close command menu first
+    setIsCommandOpen(false);
+
+    // Use a sequence of timeouts to ensure the sheet opens and input gets focused
+    setTimeout(() => {
+      setIsAddArticleSheetOpen(true);
+    }, 50);
+  };
 
   const openAddBookSheet = () => {
     // Close command menu first
@@ -138,15 +175,33 @@ export function CommandMenuProvider({
     }, 50);
   };
 
-  const openAddArticleSheet = () => {
+  const openAddNoteSheet = () => {
     // Close command menu first
     setIsCommandOpen(false);
 
     // Use a sequence of timeouts to ensure the sheet opens and input gets focused
     setTimeout(() => {
-      setIsAddArticleSheetOpen(true);
+      setIsAddNoteSheetOpen(true);
     }, 50);
   };
+
+  // Wrap addArticle to handle sheet closing and notify listeners
+  const handleAddArticle = useCallback(
+    async (articleData: NewArticleData) => {
+      const success = await addArticle(articleData);
+
+      if (success) {
+        // Close the sheet after successful add
+        setIsAddArticleSheetOpen(false);
+
+        // Notify all components that need to refresh their article lists
+        articleEvents.emit();
+      }
+
+      return success;
+    },
+    [addArticle]
+  );
 
   // Wrap addBook to handle sheet closing and notify listeners
   const handleAddBook = useCallback(
@@ -184,22 +239,23 @@ export function CommandMenuProvider({
     [addLink]
   );
 
-  // Wrap addArticle to handle sheet closing and notify listeners
-  const handleAddArticle = useCallback(
-    async (articleData: NewArticleData) => {
-      const success = await addArticle(articleData);
+  // Wrap createNote to handle sheet closing and notify listeners
+  const handleAddNote = useCallback(
+    async (noteData: { title: string; content: string; tags: string[] }) => {
+      // Convert the noteData to the format expected by createNote
+      const success = await createNote({ content: noteData.content });
 
       if (success) {
         // Close the sheet after successful add
-        setIsAddArticleSheetOpen(false);
+        setIsAddNoteSheetOpen(false);
 
-        // Notify all components that need to refresh their article lists
-        articleEvents.emit();
+        // Notify all components that need to refresh their note lists
+        noteListEvents.emit();
       }
 
       return success;
     },
-    [addArticle]
+    [createNote]
   );
 
   // Navigation functions
@@ -210,7 +266,12 @@ export function CommandMenuProvider({
 
   return (
     <CommandMenuContext.Provider
-      value={{ openAddBookSheet, openAddLinkSheet, openAddArticleSheet }}
+      value={{
+        openAddArticleSheet,
+        openAddBookSheet,
+        openAddLinkSheet,
+        openAddNoteSheet,
+      }}
     >
       {children}
 
@@ -244,6 +305,11 @@ export function CommandMenuProvider({
           </CommandGroup>
 
           <CommandGroup heading="Actions">
+            <CommandItem onSelect={openAddArticleSheet}>
+              <FileTextIcon className="h-4 w-4" />
+              Add Article
+              <CommandShortcut>⌘A</CommandShortcut>
+            </CommandItem>
             <CommandItem onSelect={openAddBookSheet}>
               <BookOpenIcon className="h-4 w-4" />
               Add Book
@@ -254,14 +320,21 @@ export function CommandMenuProvider({
               Add Link
               <CommandShortcut>⌘L</CommandShortcut>
             </CommandItem>
-            <CommandItem onSelect={openAddArticleSheet}>
-              <FileTextIcon className="h-4 w-4" />
-              Add Article
-              <CommandShortcut>⌘A</CommandShortcut>
+            <CommandItem onSelect={openAddNoteSheet}>
+              <StickyNoteIcon className="h-4 w-4" />
+              Add Note
+              <CommandShortcut>⌘N</CommandShortcut>
             </CommandItem>
           </CommandGroup>
         </CommandList>
       </CommandDialog>
+
+      {/* AddArticleSheet */}
+      <AddArticleSheet
+        onAddArticle={handleAddArticle}
+        isOpen={isAddArticleSheetOpen}
+        onOpenChange={setIsAddArticleSheetOpen}
+      />
 
       {/* AddBookSheet */}
       <AddBookSheet
@@ -277,11 +350,11 @@ export function CommandMenuProvider({
         onOpenChange={setIsAddLinkSheetOpen}
       />
 
-      {/* AddArticleSheet */}
-      <AddArticleSheet
-        onAddArticle={handleAddArticle}
-        isOpen={isAddArticleSheetOpen}
-        onOpenChange={setIsAddArticleSheetOpen}
+      {/* AddNoteSheet */}
+      <AddNoteSheet
+        onAddNote={handleAddNote}
+        isOpen={isAddNoteSheetOpen}
+        onOpenChange={setIsAddNoteSheetOpen}
       />
     </CommandMenuContext.Provider>
   );

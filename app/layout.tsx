@@ -4,6 +4,7 @@ import { DarkModeProvider } from "@/components/providers/DarkModeProvider";
 import { AuthProvider } from "@/components/providers/AuthProvider";
 import { CommandMenuProvider } from "@/components/providers/CommandMenuProvider";
 import { Bricolage_Grotesque } from "next/font/google";
+import { Navigation } from "@/components/global/Navigation";
 
 const bricolageGrotesque = Bricolage_Grotesque({
   variable: "--font-bricolage-grotesque",
@@ -31,7 +32,10 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <CommandMenuProvider>{children}</CommandMenuProvider>
+            <CommandMenuProvider>
+              <Navigation />
+              <main className="min-h-screen">{children}</main>
+            </CommandMenuProvider>
           </DarkModeProvider>
         </AuthProvider>
       </body>

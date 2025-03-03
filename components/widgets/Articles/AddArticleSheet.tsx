@@ -268,7 +268,6 @@ export function AddArticleSheet({
           <Button
             onClick={handleAddArticle}
             disabled={isLoading || !newArticle.url || success}
-            className="w-full"
           >
             {isLoading ? (
               <>
