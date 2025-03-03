@@ -272,19 +272,16 @@ export function AddArticleSheet({
           >
             {isLoading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
                 Adding Article...
               </>
             ) : success ? (
               <>
-                <CircleCheckBig className="mr-2 h-4 w-4" />
+                <CircleCheckBig className="h-4 w-4" />
                 Article Added!
               </>
             ) : (
-              <>
-                <PlusIcon className="mr-2 h-4 w-4" />
-                Add Article
-              </>
+              <>Add Article</>
             )}
           </Button>
         </SheetFooter>

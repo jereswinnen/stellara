@@ -270,10 +270,7 @@ export function AddLinkSheet({
                 Link Added!
               </>
             ) : (
-              <>
-                <CircleCheckBig className="h-4 w-4" />
-                Add Link
-              </>
+              <>Add Link</>
             )}
           </Button>
         </SheetFooter>

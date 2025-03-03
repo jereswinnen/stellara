@@ -18,13 +18,17 @@ import {
 } from "@/components/ui/command";
 import { AddBookSheet } from "@/components/widgets/ReadingList/AddBookSheet";
 import { AddLinkSheet } from "@/components/widgets/Links/AddLinkSheet";
+import { AddArticleSheet } from "@/components/widgets/Articles/AddArticleSheet";
 import { useReadingList } from "@/hooks/useReadingList";
 import { useLinks } from "@/hooks/useLinks";
-import { BookOpenIcon, LinkIcon } from "lucide-react";
+import { useArticles } from "@/hooks/useArticles";
+import { BookOpenIcon, LinkIcon, FileTextIcon } from "lucide-react";
 import { NewBookData } from "@/hooks/useReadingList";
 import { NewLinkData } from "@/hooks/useLinks";
+import { NewArticleData } from "@/hooks/useArticles";
 import { useAuth } from "@/components/providers/auth-provider";
 import { linkEvents } from "@/components/widgets/Links/Links";
+import { articleEvents } from "@/components/widgets/Articles/Articles";
 
 // Create a simple event emitter for book list refresh
 export const bookListEvents = {
@@ -45,6 +49,7 @@ export const bookListEvents = {
 interface CommandMenuContextType {
   openAddBookSheet: () => void;
   openAddLinkSheet: () => void;
+  openAddArticleSheet: () => void;
 }
 
 const CommandMenuContext = createContext<CommandMenuContextType | undefined>(
@@ -67,9 +72,11 @@ export function CommandMenuProvider({
   const [isCommandOpen, setIsCommandOpen] = useState(false);
   const [isAddBookSheetOpen, setIsAddBookSheetOpen] = useState(false);
   const [isAddLinkSheetOpen, setIsAddLinkSheetOpen] = useState(false);
+  const [isAddArticleSheetOpen, setIsAddArticleSheetOpen] = useState(false);
   const { user } = useAuth();
   const { addBook } = useReadingList(user);
   const { addLink } = useLinks(user);
+  const { addArticle } = useArticles(user);
 
   // Set up keyboard shortcuts
   useEffect(() => {
@@ -90,6 +97,12 @@ export function CommandMenuProvider({
       if (e.key === "l" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         openAddLinkSheet();
+      }
+
+      // Add article shortcut (⌘A)
+      if (e.key === "a" && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        openAddArticleSheet();
       }
     };
 
@@ -114,6 +127,16 @@ export function CommandMenuProvider({
     // Use a sequence of timeouts to ensure the sheet opens and input gets focused
     setTimeout(() => {
       setIsAddLinkSheetOpen(true);
+    }, 50);
+  };
+
+  const openAddArticleSheet = () => {
+    // Close command menu first
+    setIsCommandOpen(false);
+
+    // Use a sequence of timeouts to ensure the sheet opens and input gets focused
+    setTimeout(() => {
+      setIsAddArticleSheetOpen(true);
     }, 50);
   };
 
@@ -153,8 +176,28 @@ export function CommandMenuProvider({
     [addLink]
   );
 
+  // Wrap addArticle to handle sheet closing and notify listeners
+  const handleAddArticle = useCallback(
+    async (articleData: NewArticleData) => {
+      const success = await addArticle(articleData);
+
+      if (success) {
+        // Close the sheet after successful add
+        setIsAddArticleSheetOpen(false);
+
+        // Notify all components that need to refresh their article lists
+        articleEvents.emit();
+      }
+
+      return success;
+    },
+    [addArticle]
+  );
+
   return (
-    <CommandMenuContext.Provider value={{ openAddBookSheet, openAddLinkSheet }}>
+    <CommandMenuContext.Provider
+      value={{ openAddBookSheet, openAddLinkSheet, openAddArticleSheet }}
+    >
       {children}
 
       {/* Command Dialog */}
@@ -164,14 +207,19 @@ export function CommandMenuProvider({
           <CommandEmpty>No results found.</CommandEmpty>
           <CommandGroup heading="Actions">
             <CommandItem onSelect={openAddBookSheet}>
-              <BookOpenIcon className="mr-2 h-4 w-4" />
+              <BookOpenIcon className="h-4 w-4" />
               Add Book
               <CommandShortcut>⌘B</CommandShortcut>
             </CommandItem>
             <CommandItem onSelect={openAddLinkSheet}>
-              <LinkIcon className="mr-2 h-4 w-4" />
+              <LinkIcon className="h-4 w-4" />
               Add Link
               <CommandShortcut>⌘L</CommandShortcut>
+            </CommandItem>
+            <CommandItem onSelect={openAddArticleSheet}>
+              <FileTextIcon className="h-4 w-4" />
+              Add Article
+              <CommandShortcut>⌘A</CommandShortcut>
             </CommandItem>
           </CommandGroup>
         </CommandList>
@@ -189,6 +237,13 @@ export function CommandMenuProvider({
         onAddLink={handleAddLink}
         isOpen={isAddLinkSheetOpen}
         onOpenChange={setIsAddLinkSheetOpen}
+      />
+
+      {/* AddArticleSheet */}
+      <AddArticleSheet
+        onAddArticle={handleAddArticle}
+        isOpen={isAddArticleSheetOpen}
+        onOpenChange={setIsAddArticleSheetOpen}
       />
     </CommandMenuContext.Provider>
   );
