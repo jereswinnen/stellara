@@ -29,7 +29,7 @@ import {
   CircleCheckBig,
   X,
 } from "lucide-react";
-import { BookStatus, NewBookData } from "@/hooks/useReadingList";
+import { BookStatus, NewBookData } from "@/hooks/useBooks";
 import {
   OpenLibraryBook,
   searchBooks,

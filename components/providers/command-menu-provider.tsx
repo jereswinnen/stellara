@@ -16,14 +16,14 @@ import {
   CommandItem,
   CommandShortcut,
 } from "@/components/ui/command";
-import { AddBookSheet } from "@/components/widgets/ReadingList/AddBookSheet";
+import { AddBookSheet } from "@/components/widgets/Books/AddBookSheet";
 import { AddLinkSheet } from "@/components/widgets/Links/AddLinkSheet";
 import { AddArticleSheet } from "@/components/widgets/Articles/AddArticleSheet";
-import { useReadingList } from "@/hooks/useReadingList";
+import { useBooks } from "@/hooks/useBooks";
 import { useLinks } from "@/hooks/useLinks";
 import { useArticles } from "@/hooks/useArticles";
 import { BookOpenIcon, LinkIcon, FileTextIcon } from "lucide-react";
-import { NewBookData } from "@/hooks/useReadingList";
+import { NewBookData } from "@/hooks/useBooks";
 import { NewLinkData } from "@/hooks/useLinks";
 import { NewArticleData } from "@/hooks/useArticles";
 import { useAuth } from "@/components/providers/auth-provider";
@@ -74,7 +74,7 @@ export function CommandMenuProvider({
   const [isAddLinkSheetOpen, setIsAddLinkSheetOpen] = useState(false);
   const [isAddArticleSheetOpen, setIsAddArticleSheetOpen] = useState(false);
   const { user } = useAuth();
-  const { addBook } = useReadingList(user);
+  const { addBook } = useBooks(user);
   const { addLink } = useLinks(user);
   const { addArticle } = useArticles(user);
 

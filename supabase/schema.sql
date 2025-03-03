@@ -23,7 +23,7 @@ END $$;
 -- Then drop tables (in correct order due to dependencies)
 DROP TABLE IF EXISTS links;
 DROP TABLE IF EXISTS articles;
-DROP TABLE IF EXISTS reading_list;
+DROP TABLE IF EXISTS books;
 DROP TABLE IF EXISTS notes;
 DROP TABLE IF EXISTS users;
 
@@ -57,7 +57,7 @@ CREATE TABLE notes (
 );
 
 -- Create reading list table
-CREATE TABLE reading_list (
+CREATE TABLE books (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     book_title TEXT NOT NULL,
     author TEXT NOT NULL,
@@ -184,7 +184,7 @@ END $$;
 -- Enable RLS
 ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE notes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE reading_list ENABLE ROW LEVEL SECURITY;
+ALTER TABLE books ENABLE ROW LEVEL SECURITY;
 ALTER TABLE links ENABLE ROW LEVEL SECURITY;
 ALTER TABLE articles ENABLE ROW LEVEL SECURITY;
 
@@ -218,20 +218,20 @@ CREATE POLICY "Users can delete their own notes"
     ON notes FOR DELETE
     USING (auth.uid() = user_id);
 
--- Create policies for reading list
-CREATE POLICY "Users can view their own reading list"
+-- Create policies for books
+CREATE POLICY "Users can view their own books"
     ON reading_list FOR SELECT
     USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can create their own reading list entries"
+CREATE POLICY "Users can create their own book entries"
     ON reading_list FOR INSERT
     WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can update their own reading list entries"
+CREATE POLICY "Users can update their own book entries"
     ON reading_list FOR UPDATE
     USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can delete their own reading list entries"
+CREATE POLICY "Users can delete their own book entries"
     ON reading_list FOR DELETE
     USING (auth.uid() = user_id);
 

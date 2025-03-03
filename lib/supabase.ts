@@ -27,7 +27,7 @@ export type Note = {
   user_id: string;
 };
 
-export type ReadingListItem = {
+export type BookItem = {
   id: string;
   book_title: string;
   author: string;

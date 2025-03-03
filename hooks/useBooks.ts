@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { supabase, ReadingListItem } from "@/lib/supabase";
+import { supabase, BookItem } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
 
 export type BookStatus = "Backlog" | "Reading" | "Finished" | "Abandoned";
@@ -23,8 +23,8 @@ export interface UpdateBookData {
   rating?: number;
 }
 
-export function useReadingList(user: User | null) {
-  const [books, setBooks] = useState<ReadingListItem[]>([]);
+export function useBooks(user: User | null) {
+  const [books, setBooks] = useState<BookItem[]>([]);
   const [loading, setLoading] = useState(true);
   const initialFetchDone = useRef(false);
   const userIdRef = useRef<string | null>(null);
@@ -36,7 +36,7 @@ export function useReadingList(user: User | null) {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from("reading_list")
+        .from("books")
         .select("*")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
@@ -60,7 +60,7 @@ export function useReadingList(user: User | null) {
     if (!bookData.book_title || !bookData.author) return false;
 
     try {
-      const { error } = await supabase.from("reading_list").insert({
+      const { error } = await supabase.from("books").insert({
         book_title: bookData.book_title,
         author: bookData.author,
         book_cover_url: bookData.book_cover_url || null,
@@ -107,7 +107,7 @@ export function useReadingList(user: User | null) {
 
         // Get the current book to check previous status
         const { data: currentBook } = await supabase
-          .from("reading_list")
+          .from("books")
           .select("status")
           .eq("id", bookData.id)
           .single();
@@ -145,7 +145,7 @@ export function useReadingList(user: User | null) {
       }
 
       const { error } = await supabase
-        .from("reading_list")
+        .from("books")
         .update(updates)
         .eq("id", bookData.id)
         .eq("user_id", user.id);
@@ -169,7 +169,7 @@ export function useReadingList(user: User | null) {
 
     try {
       const { error } = await supabase
-        .from("reading_list")
+        .from("books")
         .delete()
         .eq("id", bookId)
         .eq("user_id", user.id);

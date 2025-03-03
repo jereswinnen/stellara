@@ -47,7 +47,7 @@ export type Database = {
           updated_at?: string;
         };
       };
-      reading_list: {
+      books: {
         Row: {
           id: string;
           book_title: string;

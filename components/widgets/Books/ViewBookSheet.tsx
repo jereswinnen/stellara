@@ -29,8 +29,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { BookStatus, UpdateBookData } from "@/hooks/useReadingList";
-import { ReadingListItem } from "@/lib/supabase";
+import { BookStatus, UpdateBookData } from "@/hooks/useBooks";
+import { BookItem } from "@/lib/supabase";
 import {
   BookOpenIcon,
   CircleCheckBig,
@@ -39,7 +39,7 @@ import {
 } from "lucide-react";
 
 interface ViewBookSheetProps {
-  book: ReadingListItem;
+  book: BookItem;
   onUpdateBook: (bookData: UpdateBookData) => Promise<boolean>;
   onDeleteBook: (bookId: string) => Promise<boolean>;
   trigger?: React.ReactNode;

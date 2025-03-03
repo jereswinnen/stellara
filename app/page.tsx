@@ -7,7 +7,7 @@ import { DateTime } from "@/components/widgets/DateTime";
 import { Notes } from "@/components/widgets/Notes/Notes";
 import { PokemonOfTheDay } from "@/components/widgets/PokemonOfTheDay";
 import { OnThisDay } from "@/components/widgets/OnThisDay";
-import { ReadingList } from "@/components/widgets/ReadingList/ReadingList";
+import { Books } from "@/components/widgets/Books/Books";
 import { Links } from "@/components/widgets/Links/Links";
 import { Articles } from "@/components/widgets/Articles/Articles";
 import { Button } from "@/components/ui/button";
@@ -70,9 +70,9 @@ export default function Home() {
           <Notes />
         </div>
 
-        {/* ReadingList Module */}
+        {/* Books Module */}
         <div className="col-span-full lg:col-span-2">
-          <ReadingList />
+          <Books />
         </div>
 
         {/* Links Module */}

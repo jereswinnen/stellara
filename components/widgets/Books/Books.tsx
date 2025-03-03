@@ -2,8 +2,8 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpenIcon, PlusIcon } from "lucide-react";
-import { ViewBookSheet } from "@/components/widgets/ReadingList/ViewBookSheet";
-import { useReadingList } from "@/hooks/useReadingList";
+import { ViewBookSheet } from "@/components/widgets/Books/ViewBookSheet";
+import { useBooks } from "@/hooks/useBooks";
 import {
   useCommandMenu,
   bookListEvents,
@@ -12,10 +12,10 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useEffect } from "react";
 
-export function ReadingList() {
+export function Books() {
   const { user } = useAuth();
   const { loading, currentlyReadingBooks, updateBook, deleteBook, fetchBooks } =
-    useReadingList(user);
+    useBooks(user);
   const { openAddBookSheet } = useCommandMenu();
 
   // Listen for book list refresh events
@@ -32,7 +32,7 @@ export function ReadingList() {
   return (
     <Card className="h-full">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-xl font-bold">Reading List</CardTitle>
+        <CardTitle className="text-xl font-bold">Books</CardTitle>
         <Button size="sm" className="h-8 w-8 p-0" onClick={openAddBookSheet}>
           <PlusIcon className="h-4 w-4" />
         </Button>
