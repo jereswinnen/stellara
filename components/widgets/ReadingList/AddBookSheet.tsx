@@ -27,6 +27,7 @@ import {
   SearchIcon,
   Loader2,
   CircleCheckBig,
+  X,
 } from "lucide-react";
 import { BookStatus, NewBookData } from "@/hooks/useReadingList";
 import {
@@ -56,6 +57,8 @@ export function AddBookSheet({
     book_cover_url: "",
     status: "Backlog",
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   // Open Library search state
   const [searchQuery, setSearchQuery] = useState("");
@@ -90,11 +93,11 @@ export function AddBookSheet({
       author: "",
       book_cover_url: "",
       status: "Backlog",
-      rating: undefined,
     });
     setSearchQuery("");
     setSearchResults([]);
     setSelectedBook(null);
+    setSuccess(false);
 
     // Clear any pending search timeout
     if (searchTimeoutRef.current) {
@@ -122,10 +125,19 @@ export function AddBookSheet({
   const handleAddBook = async () => {
     if (!newBook.book_title || !newBook.author) return;
 
-    const success = await onAddBook(newBook);
-    if (success) {
-      resetForm();
-      // Let the parent component handle closing the sheet
+    setIsLoading(true);
+    try {
+      const success = await onAddBook(newBook);
+      if (success) {
+        setSuccess(true);
+        setTimeout(() => {
+          resetForm();
+          // Let the parent component handle closing the sheet
+          onOpenChange?.(false);
+        }, 1000);
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -192,10 +204,19 @@ export function AddBookSheet({
   const handleAddSelectedBook = async () => {
     if (!selectedBook) return;
 
-    const success = await onAddBook(newBook);
-    if (success) {
-      resetForm();
-      // Let the parent component handle closing the sheet
+    setIsLoading(true);
+    try {
+      const success = await onAddBook(newBook);
+      if (success) {
+        setSuccess(true);
+        setTimeout(() => {
+          resetForm();
+          // Let the parent component handle closing the sheet
+          onOpenChange?.(false);
+        }, 1000);
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -220,7 +241,7 @@ export function AddBookSheet({
           </SheetDescription>
         </SheetHeader>
 
-        <Tabs defaultValue="lookup" className="px-4">
+        <Tabs defaultValue="lookup" className="px-4 overflow-y-scroll">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="lookup">Lookup</TabsTrigger>
             <TabsTrigger value="manual">Manual</TabsTrigger>
@@ -365,9 +386,24 @@ export function AddBookSheet({
                 </div>
 
                 <SheetFooter className="p-0">
-                  <Button onClick={handleAddSelectedBook}>
-                    <CircleCheckBig className="h-4 w-4" />
-                    Add Book
+                  <Button
+                    onClick={handleAddSelectedBook}
+                    disabled={isLoading || !selectedBook || success}
+                    className="w-full"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Adding Book...
+                      </>
+                    ) : success ? (
+                      <>
+                        <CircleCheckBig className="h-4 w-4 mr-2" />
+                        Book Added!
+                      </>
+                    ) : (
+                      <>Add Selected Book</>
+                    )}
                   </Button>
                 </SheetFooter>
               </div>
@@ -462,10 +498,23 @@ export function AddBookSheet({
             <SheetFooter className="p-0">
               <Button
                 onClick={handleAddBook}
-                disabled={!newBook.book_title || !newBook.author}
+                disabled={
+                  isLoading || !newBook.book_title || !newBook.author || success
+                }
               >
-                <CircleCheckBig className="h-4 w-4" />
-                Add Book
+                {isLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Adding Book...
+                  </>
+                ) : success ? (
+                  <>
+                    <CircleCheckBig className="h-4 w-4" />
+                    Book Added!
+                  </>
+                ) : (
+                  <>Add Book</>
+                )}
               </Button>
             </SheetFooter>
           </TabsContent>
