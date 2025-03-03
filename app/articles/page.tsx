@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/components/providers/auth-provider";
+import { useAuth } from "@/components/providers/AuthProvider";
 import { Articles } from "@/components/widgets/Articles/Articles";
 
 export default function ArticlesPage() {

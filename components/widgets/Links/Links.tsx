@@ -6,7 +6,7 @@ import { AddLinkSheet } from "@/components/widgets/Links/AddLinkSheet";
 import { ViewLinkSheet } from "@/components/widgets/Links/ViewLinkSheet";
 import { useLinks } from "@/hooks/useLinks";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/components/providers/auth-provider";
+import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@/lib/supabase";

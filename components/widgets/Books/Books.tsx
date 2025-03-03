@@ -7,9 +7,9 @@ import { useBooks } from "@/hooks/useBooks";
 import {
   useCommandMenu,
   bookListEvents,
-} from "@/components/providers/command-menu-provider";
+} from "@/components/providers/CommandMenuProvider";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/components/providers/auth-provider";
+import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffect } from "react";
 
 export function Books() {

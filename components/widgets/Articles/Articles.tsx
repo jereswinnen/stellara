@@ -6,7 +6,7 @@ import { AddArticleSheet } from "@/components/widgets/Articles/AddArticleSheet";
 import { ViewArticleSheet } from "@/components/widgets/Articles/ViewArticleSheet";
 import { useArticles } from "@/hooks/useArticles";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/components/providers/auth-provider";
+import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Article } from "@/lib/supabase";
