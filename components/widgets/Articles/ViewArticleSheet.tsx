@@ -247,10 +247,10 @@ export function ViewArticleSheet({
                 </div>
 
                 {/* Article content */}
-                <div className="border rounded-lg p-4 max-h-[60vh] overflow-y-auto">
+                <div className="border rounded-lg p-6 max-h-[60vh] overflow-y-auto bg-card">
                   {article.body ? (
                     <div
-                      className="prose prose-sm max-w-none dark:prose-invert"
+                      className="prose prose-sm max-w-none dark:prose-invert article-content"
                       dangerouslySetInnerHTML={{ __html: article.body }}
                     />
                   ) : (
@@ -323,7 +323,7 @@ export function ViewArticleSheet({
                           <button
                             type="button"
                             onClick={() => handleRemoveTag(tag)}
-                            className="text-muted-foreground hover:text-foreground"
+                            className="cursor-pointer text-muted-foreground hover:text-foreground"
                             disabled={isLoading}
                           >
                             <X className="h-3 w-3" />
