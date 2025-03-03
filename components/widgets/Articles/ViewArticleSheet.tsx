@@ -101,9 +101,12 @@ export function ViewArticleSheet({
   // Handle sheet open/close
   const handleSheetOpenChange = (open: boolean) => {
     setIsSheetOpen(open);
-    onOpenChange?.(open);
 
     if (!open) {
+      // Reset state when closing
+      setActiveTab("content");
+      setIsDeleteDialogOpen(false);
+
       // Reset form when closing
       setEditedArticle({
         id: article.id,
@@ -114,6 +117,10 @@ export function ViewArticleSheet({
       });
       setNewTag("");
       setHasChanges(false);
+    }
+
+    if (onOpenChange) {
+      onOpenChange(open);
     }
   };
 
