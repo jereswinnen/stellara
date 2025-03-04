@@ -25,6 +25,7 @@ import {
 import { UpdateLinkData } from "@/hooks/useLinks";
 import { Link } from "@/lib/supabase";
 import { Badge } from "@/components/ui/badge";
+import { TagInput } from "@/components/global/TagInput";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -64,7 +65,6 @@ export function ViewLinkSheet({
     is_favorite: link.is_favorite,
     is_archive: link.is_archive,
   });
-  const [newTag, setNewTag] = useState("");
   const [hasChanges, setHasChanges] = useState(false);
 
   // Reset form when link changes
@@ -110,7 +110,6 @@ export function ViewLinkSheet({
         is_favorite: link.is_favorite,
         is_archive: link.is_archive,
       });
-      setNewTag("");
       setHasChanges(false);
     }
   };
@@ -165,14 +164,11 @@ export function ViewLinkSheet({
   };
 
   // Handle adding a tag
-  const handleAddTag = () => {
-    if (!newTag.trim() || editedLink.tags?.includes(newTag.trim())) return;
-
+  const handleAddTag = (tag: string) => {
     setEditedLink({
       ...editedLink,
-      tags: [...(editedLink.tags || []), newTag.trim()],
+      tags: [...(editedLink.tags || []), tag],
     });
-    setNewTag("");
   };
 
   // Handle removing a tag
@@ -253,53 +249,12 @@ export function ViewLinkSheet({
             {/* Edit tags */}
             <div className="space-y-2">
               <Label htmlFor="tags">Tags</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="tags"
-                  placeholder="Add a tag"
-                  value={newTag}
-                  onChange={(e) => setNewTag(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleAddTag();
-                    }
-                  }}
-                  disabled={isLoading}
-                />
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={handleAddTag}
-                  disabled={isLoading || !newTag.trim()}
-                >
-                  Add
-                </Button>
-              </div>
-              {editedLink.tags && editedLink.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-2">
-                  {editedLink.tags.map((tag) => (
-                    <Badge
-                      key={tag}
-                      variant="secondary"
-                      className="flex items-center gap-1"
-                    >
-                      {tag}
-                      <button
-                        type="button"
-                        className="h-3 w-3 inline-flex items-center justify-center rounded-full focus:outline-none"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleRemoveTag(tag);
-                        }}
-                        aria-label={`Remove ${tag} tag`}
-                      >
-                        <X className="h-3 w-3 cursor-pointer" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              )}
+              <TagInput
+                tags={editedLink.tags || []}
+                onAddTag={handleAddTag}
+                onRemoveTag={handleRemoveTag}
+                disabled={isLoading}
+              />
             </div>
           </div>
 

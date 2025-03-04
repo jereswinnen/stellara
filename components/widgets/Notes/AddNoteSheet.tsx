@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
 import { MarkdownEditor } from "@/components/global/MarkdownEditor";
+import { TagInput } from "@/components/global/TagInput";
 
 interface NewNoteData {
   title: string;
@@ -36,7 +37,6 @@ export function AddNoteSheet({
     content: "",
     tags: [],
   });
-  const [newTag, setNewTag] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen_, setIsOpen_] = useState(false);
 
@@ -50,7 +50,6 @@ export function AddNoteSheet({
       content: "",
       tags: [],
     });
-    setNewTag("");
     setIsLoading(false);
   };
 
@@ -83,15 +82,11 @@ export function AddNoteSheet({
     }
   };
 
-  const handleAddTag = () => {
-    if (!newTag.trim() || newNote.tags.includes(newTag.trim())) {
-      return;
-    }
+  const handleAddTag = (tag: string) => {
     setNewNote({
       ...newNote,
-      tags: [...newNote.tags, newTag.trim()],
+      tags: [...newNote.tags, tag],
     });
-    setNewTag("");
   };
 
   const handleRemoveTag = (tagToRemove: string) => {
@@ -132,49 +127,13 @@ export function AddNoteSheet({
             />
           </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="tags">Tags</Label>
-            <div className="flex items-center gap-2">
-              <Input
-                id="tags"
-                value={newTag}
-                onChange={(e) => setNewTag(e.target.value)}
-                placeholder="Add a tag"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleAddTag();
-                  }
-                }}
-              />
-              <Button
-                type="button"
-                size="sm"
-                onClick={handleAddTag}
-                disabled={isLoading || !newTag.trim()}
-              >
-                Add
-              </Button>
-            </div>
-
-            {newNote.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-2">
-                {newNote.tags.map((tag) => (
-                  <Badge key={tag} variant="secondary">
-                    {tag}
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-4 w-4 ml-1 p-0"
-                      onClick={() => handleRemoveTag(tag)}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </Badge>
-                ))}
-              </div>
-            )}
+          <div className="space-y-2">
+            <TagInput
+              tags={newNote.tags}
+              onAddTag={handleAddTag}
+              onRemoveTag={handleRemoveTag}
+              disabled={isLoading}
+            />
           </div>
 
           <Button

@@ -18,6 +18,7 @@ import { NewLinkData } from "@/hooks/useLinks";
 import { fetchUrlMetadata } from "@/lib/urlMetadata";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
+import { TagInput } from "@/components/global/TagInput";
 
 interface AddLinkSheetProps {
   onAddLink: (linkData: NewLinkData) => Promise<boolean>;
@@ -40,7 +41,6 @@ export function AddLinkSheet({
 
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [newTag, setNewTag] = useState("");
   const [isFetchingMetadata, setIsFetchingMetadata] = useState(false);
 
   // Focus on URL input when sheet opens
@@ -68,7 +68,6 @@ export function AddLinkSheet({
       title: "",
       tags: [],
     });
-    setNewTag("");
     setSuccess(false);
   };
 
@@ -134,14 +133,11 @@ export function AddLinkSheet({
   };
 
   // Handle adding a tag
-  const handleAddTag = () => {
-    if (!newTag.trim() || newLink.tags?.includes(newTag.trim())) return;
-
+  const handleAddTag = (tag: string) => {
     setNewLink({
       ...newLink,
-      tags: [...(newLink.tags || []), newTag.trim()],
+      tags: [...(newLink.tags || []), tag],
     });
-    setNewTag("");
   };
 
   // Handle removing a tag
@@ -210,46 +206,12 @@ export function AddLinkSheet({
 
           <div className="space-y-2">
             <Label htmlFor="tags">Tags</Label>
-            <div className="flex items-center gap-2">
-              <Input
-                id="tags"
-                placeholder="Add a tag"
-                value={newTag}
-                onChange={(e) => setNewTag(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleAddTag();
-                  }
-                }}
-                disabled={isLoading}
-              />
-              <Button
-                type="button"
-                size="sm"
-                onClick={handleAddTag}
-                disabled={isLoading || !newTag.trim()}
-              >
-                Add
-              </Button>
-            </div>
-            {newLink.tags && newLink.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-2">
-                {newLink.tags.map((tag) => (
-                  <Badge
-                    key={tag}
-                    variant="secondary"
-                    className="flex items-center gap-1"
-                  >
-                    {tag}
-                    <X
-                      className="h-3 w-3 cursor-pointer"
-                      onClick={() => handleRemoveTag(tag)}
-                    />
-                  </Badge>
-                ))}
-              </div>
-            )}
+            <TagInput
+              tags={newLink.tags || []}
+              onAddTag={handleAddTag}
+              onRemoveTag={handleRemoveTag}
+              disabled={isLoading}
+            />
           </div>
         </div>
 

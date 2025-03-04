@@ -23,6 +23,7 @@ import {
 import { NewArticleData } from "@/hooks/useArticles";
 import { fetchUrlMetadata } from "@/lib/urlMetadata";
 import { Badge } from "@/components/ui/badge";
+import { TagInput } from "@/components/global/TagInput";
 
 interface AddArticleSheetProps {
   onAddArticle: (articleData: NewArticleData) => Promise<boolean>;
@@ -45,7 +46,6 @@ export function AddArticleSheet({
 
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [newTag, setNewTag] = useState("");
   const [isFetchingMetadata, setIsFetchingMetadata] = useState(false);
 
   // Focus on URL input when sheet opens
@@ -73,7 +73,7 @@ export function AddArticleSheet({
       title: "",
       tags: [],
     });
-    setNewTag("");
+    setIsLoading(false);
     setSuccess(false);
   };
 
@@ -139,14 +139,11 @@ export function AddArticleSheet({
   };
 
   // Handle adding a tag
-  const handleAddTag = () => {
-    if (!newTag.trim() || newArticle.tags?.includes(newTag.trim())) return;
-
+  const handleAddTag = (tag: string) => {
     setNewArticle({
       ...newArticle,
-      tags: [...(newArticle.tags || []), newTag.trim()],
+      tags: [...(newArticle.tags || []), tag],
     });
-    setNewTag("");
   };
 
   // Handle removing a tag
@@ -215,52 +212,12 @@ export function AddArticleSheet({
 
           <div className="space-y-2">
             <Label htmlFor="tags">Tags</Label>
-            <div className="flex items-center gap-2">
-              <Input
-                id="tags"
-                placeholder="Add a tag"
-                value={newTag}
-                onChange={(e) => setNewTag(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleAddTag();
-                  }
-                }}
-                disabled={isLoading}
-              />
-              <Button
-                type="button"
-                size="sm"
-                onClick={handleAddTag}
-                disabled={isLoading || !newTag.trim()}
-              >
-                Add
-              </Button>
-            </div>
-
-            {/* Display tags */}
-            {newArticle.tags && newArticle.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-2">
-                {newArticle.tags.map((tag) => (
-                  <Badge
-                    key={tag}
-                    variant="secondary"
-                    className="flex items-center gap-1 px-2 py-1"
-                  >
-                    {tag}
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveTag(tag)}
-                      className="text-muted-foreground hover:text-foreground"
-                      disabled={isLoading}
-                    >
-                      <X className="cursor-pointer h-3 w-3" />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
-            )}
+            <TagInput
+              tags={newArticle.tags || []}
+              onAddTag={handleAddTag}
+              onRemoveTag={handleRemoveTag}
+              disabled={isLoading}
+            />
           </div>
         </div>
 

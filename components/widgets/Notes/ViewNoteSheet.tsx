@@ -27,6 +27,7 @@ import { X, Loader2, Trash2Icon } from "lucide-react";
 import { Note } from "@/lib/supabase";
 import { UpdateNoteData } from "@/hooks/useNotes";
 import { MarkdownEditor } from "@/components/global/MarkdownEditor";
+import { TagInput } from "@/components/global/TagInput";
 
 interface ViewNoteSheetProps {
   note: Note;
@@ -50,7 +51,6 @@ export function ViewNoteSheet({
     content: note.content,
     tags: note.tags || [],
   });
-  const [newTag, setNewTag] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -73,7 +73,6 @@ export function ViewNoteSheet({
         content: note.content,
         tags: note.tags || [],
       });
-      setNewTag("");
       setHasChanges(false);
     }
   };
@@ -111,16 +110,12 @@ export function ViewNoteSheet({
     }
   };
 
-  const handleAddTag = () => {
-    if (!newTag.trim() || editedNote.tags.includes(newTag.trim())) {
-      return;
-    }
+  const handleAddTag = (tag: string) => {
     const updatedNote = {
       ...editedNote,
-      tags: [...editedNote.tags, newTag.trim()],
+      tags: [...editedNote.tags, tag],
     };
     setEditedNote(updatedNote);
-    setNewTag("");
     setHasChanges(checkForChanges(updatedNote));
   };
 
@@ -162,49 +157,12 @@ export function ViewNoteSheet({
             {/* Tags section */}
             <div className="space-y-2">
               <Label htmlFor="tags">Tags</Label>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="tags"
-                  value={newTag}
-                  onChange={(e) => setNewTag(e.target.value)}
-                  placeholder="Add a tag"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleAddTag();
-                    }
-                  }}
-                  disabled={isLoading}
-                />
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={handleAddTag}
-                  disabled={isLoading || !newTag.trim()}
-                >
-                  Add
-                </Button>
-              </div>
-
-              {editedNote.tags.length > 0 && (
-                <div className="flex flex-wrap gap-1 mt-2">
-                  {editedNote.tags.map((tag) => (
-                    <Badge key={tag} variant="secondary">
-                      {tag}
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        className="h-4 w-4 ml-1 p-0"
-                        onClick={() => handleRemoveTag(tag)}
-                        disabled={isLoading}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    </Badge>
-                  ))}
-                </div>
-              )}
+              <TagInput
+                tags={editedNote.tags}
+                onAddTag={handleAddTag}
+                onRemoveTag={handleRemoveTag}
+                disabled={isLoading}
+              />
             </div>
 
             {/* Action buttons */}
