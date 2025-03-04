@@ -130,5 +130,6 @@ export function useNotes(user: User | null) {
     createNote,
     updateNote,
     deleteNote,
+    fetchNotes,
   };
 }

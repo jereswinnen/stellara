@@ -21,8 +21,9 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { X, Trash2 } from "lucide-react";
+import { X, Loader2, Trash2Icon } from "lucide-react";
 import { Note } from "@/lib/supabase";
 import { UpdateNoteData } from "@/hooks/useNotes";
 import { MarkdownEditor } from "@/components/global/MarkdownEditor";
@@ -31,6 +32,8 @@ interface ViewNoteSheetProps {
   note: Note;
   onUpdateNote: (noteData: UpdateNoteData) => Promise<boolean>;
   onDeleteNote: (noteId: string) => Promise<boolean>;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
   trigger?: React.ReactNode;
 }
 
@@ -38,17 +41,18 @@ export function ViewNoteSheet({
   note,
   onUpdateNote,
   onDeleteNote,
+  isOpen,
+  onOpenChange,
   trigger,
 }: ViewNoteSheetProps) {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editedNote, setEditedNote] = useState({
     content: note.content,
     tags: note.tags || [],
   });
   const [newTag, setNewTag] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
 
   // Check if there are changes
@@ -60,7 +64,9 @@ export function ViewNoteSheet({
   };
 
   const handleSheetOpenChange = (open: boolean) => {
-    setIsOpen(open);
+    setIsSheetOpen(open);
+    onOpenChange?.(open);
+
     if (!open) {
       // Reset to original content when closing
       setEditedNote({
@@ -74,8 +80,8 @@ export function ViewNoteSheet({
 
   const handleSaveChanges = async () => {
     if (!editedNote.content.trim()) return;
-
     setIsLoading(true);
+
     try {
       const success = await onUpdateNote({
         id: note.id,
@@ -84,8 +90,8 @@ export function ViewNoteSheet({
       });
 
       if (success) {
-        setHasChanges(false);
-        //onOpenChange?.(false);
+        //setHasChanges(false);
+        onOpenChange?.(false);
       }
     } finally {
       setIsLoading(false);
@@ -93,15 +99,15 @@ export function ViewNoteSheet({
   };
 
   const handleDeleteNote = async () => {
-    setIsDeleting(true);
+    setIsLoading(true);
     try {
       const success = await onDeleteNote(note.id);
       if (success) {
-        setShowDeleteConfirm(false);
-        setIsOpen(false);
+        setIsDeleteDialogOpen(false);
+        onOpenChange?.(false);
       }
     } finally {
-      setIsDeleting(false);
+      setIsLoading(false);
     }
   };
 
@@ -136,10 +142,6 @@ export function ViewNoteSheet({
   return (
     <>
       <Sheet open={isOpen} onOpenChange={handleSheetOpenChange}>
-        <SheetTrigger asChild>
-          {trigger || <Button variant="outline">View Note</Button>}
-        </SheetTrigger>
-
         <SheetContent>
           <SheetHeader>
             <SheetTitle>View Note</SheetTitle>
@@ -153,7 +155,7 @@ export function ViewNoteSheet({
                 value={editedNote.content}
                 onChange={handleContentChange}
                 className="min-h-[200px]"
-                disabled={isLoading || isDeleting}
+                disabled={isLoading}
               />
             </div>
 
@@ -172,13 +174,13 @@ export function ViewNoteSheet({
                       handleAddTag();
                     }
                   }}
-                  disabled={isLoading || isDeleting}
+                  disabled={isLoading}
                 />
                 <Button
                   type="button"
                   size="sm"
                   onClick={handleAddTag}
-                  disabled={isLoading || isDeleting || !newTag.trim()}
+                  disabled={isLoading || !newTag.trim()}
                 >
                   Add
                 </Button>
@@ -195,7 +197,7 @@ export function ViewNoteSheet({
                         size="icon"
                         className="h-4 w-4 ml-1 p-0"
                         onClick={() => handleRemoveTag(tag)}
-                        disabled={isLoading || isDeleting}
+                        disabled={isLoading}
                       >
                         <X className="h-3 w-3" />
                       </Button>
@@ -207,7 +209,44 @@ export function ViewNoteSheet({
 
             {/* Action buttons */}
             <div className="flex justify-between mt-4">
-              <Button
+              <AlertDialog
+                open={isDeleteDialogOpen}
+                onOpenChange={setIsDeleteDialogOpen}
+              >
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="sm" disabled={isLoading}>
+                    <Trash2Icon className="h-4 w-4" />
+                    Delete
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      This will permanently delete this note. This action cannot
+                      be undone.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDeleteNote}
+                      disabled={isLoading}
+                      className="bg-destructive text-white hover:bg-destructive/90"
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Deleting...
+                        </>
+                      ) : (
+                        "Delete"
+                      )}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+              {/* <Button
                 variant="outline"
                 onClick={() => setShowDeleteConfirm(true)}
                 disabled={isLoading}
@@ -215,7 +254,7 @@ export function ViewNoteSheet({
               >
                 <Trash2 className="h-4 w-4 mr-2" />
                 Delete
-              </Button>
+              </Button> */}
               <Button
                 onClick={handleSaveChanges}
                 disabled={
@@ -229,7 +268,7 @@ export function ViewNoteSheet({
         </SheetContent>
       </Sheet>
 
-      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+      {/* <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
@@ -249,7 +288,7 @@ export function ViewNoteSheet({
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
-      </AlertDialog>
+      </AlertDialog> */}
     </>
   );
 }

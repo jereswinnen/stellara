@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,13 +12,29 @@ import { AddNoteSheet } from "@/components/widgets/Notes/AddNoteSheet";
 import { MarkdownEditor } from "@/components/global/MarkdownEditor";
 import { MarkdownContent } from "@/components/global/MarkdownContent";
 import { PlusIcon } from "lucide-react";
+import { Note } from "@/lib/supabase";
+import { noteListEvents } from "@/components/providers/CommandMenuProvider";
 
 export function Notes() {
   const { user } = useAuth();
-  const { notes, loading, createNote, updateNote, deleteNote } = useNotes(user);
+  const { notes, loading, createNote, updateNote, deleteNote, fetchNotes } =
+    useNotes(user);
   const [isAddNoteSheetOpen, setIsAddNoteSheetOpen] = useState(false);
+  const [selectedNote, setSelectedNote] = useState<Note | null>(null);
+  const [isViewNoteOpen, setIsViewNoteOpen] = useState(false);
   const [quickNoteContent, setQuickNoteContent] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+
+  // Listen for note list refresh events
+  useEffect(() => {
+    // Subscribe to note list refresh events
+    const unsubscribe = noteListEvents.subscribe(() => {
+      fetchNotes();
+    });
+
+    // Cleanup subscription on unmount
+    return unsubscribe;
+  }, [fetchNotes]);
 
   const handleQuickNoteSave = async () => {
     if (!quickNoteContent.trim()) return;
@@ -31,6 +47,8 @@ export function Notes() {
       });
       if (success) {
         setQuickNoteContent("");
+        // Notify all components that need to refresh their note lists
+        noteListEvents.emit();
       }
     } finally {
       setIsSaving(false);
@@ -47,11 +65,56 @@ export function Notes() {
         content: `# ${noteData.title}\n\n${noteData.content}`,
         tags: noteData.tags,
       });
+
+      if (success) {
+        // Notify all components that need to refresh their note lists
+        noteListEvents.emit();
+
+        // Close the sheet after successful add
+        setIsAddNoteSheetOpen(false);
+      }
+
       return success;
     } catch (error) {
       console.error("Error saving note:", error);
       return false;
     }
+  };
+
+  // Handle updating a note
+  const handleUpdateNote = async (noteData: any) => {
+    const success = await updateNote(noteData);
+
+    if (success) {
+      // Notify all components that need to refresh their note lists
+      noteListEvents.emit();
+
+      // Close the sheet after successful update
+      setIsViewNoteOpen(false);
+    }
+
+    return success;
+  };
+
+  // Handle deleting a note
+  const handleDeleteNote = async (noteId: string) => {
+    const success = await deleteNote(noteId);
+
+    if (success) {
+      // Notify all components that need to refresh their note lists
+      noteListEvents.emit();
+
+      // Close the sheet after successful delete
+      setIsViewNoteOpen(false);
+    }
+
+    return success;
+  };
+
+  // Open the view note sheet
+  const openViewNoteSheet = (note: Note) => {
+    setSelectedNote(note);
+    setIsViewNoteOpen(true);
   };
 
   return (
@@ -94,33 +157,42 @@ export function Notes() {
             <p className="text-sm text-muted-foreground">No notes yet</p>
           ) : (
             notes.map((note) => (
-              <ViewNoteSheet
+              <div
                 key={note.id}
-                note={note}
-                onUpdateNote={updateNote}
-                onDeleteNote={deleteNote}
-                trigger={
-                  <div className="cursor-pointer space-y-1 rounded-md border p-3 hover:bg-accent">
-                    <div className="line-clamp-3 text-sm">
-                      <MarkdownContent content={note.content} />
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      {formatDistanceToNow(new Date(note.updated_at), {
-                        addSuffix: true,
-                      })}
-                    </p>
-                  </div>
-                }
-              />
+                className="cursor-pointer space-y-1 rounded-md border p-3 hover:bg-accent"
+                onClick={() => openViewNoteSheet(note)}
+              >
+                <div className="line-clamp-3 text-sm">
+                  <MarkdownContent content={note.content} />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {formatDistanceToNow(new Date(note.updated_at), {
+                    addSuffix: true,
+                  })}
+                </p>
+              </div>
             ))
           )}
         </div>
       </CardContent>
+
+      {/* AddNoteSheet - always render it once, controlled by isAddNoteSheetOpen */}
       <AddNoteSheet
         onAddNote={handleNewNoteSave}
         isOpen={isAddNoteSheetOpen}
         onOpenChange={setIsAddNoteSheetOpen}
       />
+
+      {/* ViewNoteSheet - only render when a note is selected */}
+      {selectedNote && (
+        <ViewNoteSheet
+          note={selectedNote}
+          onUpdateNote={handleUpdateNote}
+          onDeleteNote={handleDeleteNote}
+          isOpen={isViewNoteOpen}
+          onOpenChange={setIsViewNoteOpen}
+        />
+      )}
     </Card>
   );
 }

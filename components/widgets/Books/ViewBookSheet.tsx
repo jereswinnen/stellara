@@ -31,18 +31,15 @@ import {
 } from "@/components/ui/alert-dialog";
 import { BookStatus, UpdateBookData } from "@/hooks/useBooks";
 import { BookItem } from "@/lib/supabase";
-import {
-  BookOpenIcon,
-  CircleCheckBig,
-  PencilIcon,
-  Trash2Icon,
-} from "lucide-react";
+import { BookOpenIcon, CircleCheckBig, Trash2Icon } from "lucide-react";
 
 interface ViewBookSheetProps {
   book: BookItem;
   onUpdateBook: (bookData: UpdateBookData) => Promise<boolean>;
   onDeleteBook: (bookId: string) => Promise<boolean>;
   trigger?: React.ReactNode;
+  isOpen?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export function ViewBookSheet({
@@ -50,6 +47,8 @@ export function ViewBookSheet({
   onUpdateBook,
   onDeleteBook,
   trigger,
+  isOpen,
+  onOpenChange,
 }: ViewBookSheetProps) {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -102,6 +101,7 @@ export function ViewBookSheet({
   // Handle sheet open/close
   const handleSheetOpenChange = (open: boolean) => {
     setIsSheetOpen(open);
+    onOpenChange?.(open);
     if (!open) {
       // Reset form to original values when closing without saving
       setEditedBook({
@@ -152,20 +152,10 @@ export function ViewBookSheet({
 
   return (
     <>
-      <Sheet open={isSheetOpen} onOpenChange={handleSheetOpenChange}>
-        {trigger ? (
-          <div onClick={() => setIsSheetOpen(true)}>{trigger}</div>
-        ) : (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsSheetOpen(true)}
-            className="h-8 w-8"
-          >
-            <PencilIcon className="h-4 w-4" />
-          </Button>
-        )}
-
+      <Sheet
+        open={isOpen !== undefined ? isOpen : isSheetOpen}
+        onOpenChange={handleSheetOpenChange}
+      >
         <SheetContent>
           <SheetHeader>
             <SheetTitle>Book Details</SheetTitle>
