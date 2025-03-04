@@ -120,11 +120,10 @@ export function Notes() {
   return (
     <Card className="col-span-1 row-span-1">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-        <CardTitle className="text-sm font-medium">Notes</CardTitle>
+        <CardTitle className="text-xl font-bold">Notes</CardTitle>
         <Button
-          variant="outline"
-          size="icon"
-          className="h-7 w-7"
+          size="sm"
+          className="h-8 w-8 p-0"
           onClick={() => setIsAddNoteSheetOpen(true)}
         >
           <PlusIcon className="h-4 w-4" />

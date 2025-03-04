@@ -306,12 +306,12 @@ export function ViewArticleSheet({
                   >
                     {isLoading ? (
                       <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        <Loader2 className="h-4 w-4 animate-spin" />
                         Saving...
                       </>
                     ) : (
                       <>
-                        <CircleCheckBig className="mr-2 h-4 w-4" />
+                        <CircleCheckBig className="h-4 w-4" />
                         Save Changes
                       </>
                     )}
@@ -330,7 +330,7 @@ export function ViewArticleSheet({
                   onClick={handleToggleFavorite}
                   disabled={isLoading}
                 >
-                  <StarIcon className="h-4 w-4 mr-1" />
+                  <StarIcon className="h-4 w-4" />
                   {editedArticle.is_favorite ? "Favorited" : "Favorite"}
                 </Button>
                 <Button
@@ -339,7 +339,7 @@ export function ViewArticleSheet({
                   onClick={handleToggleArchive}
                   disabled={isLoading}
                 >
-                  <ArchiveIcon className="h-4 w-4 mr-1" />
+                  <ArchiveIcon className="h-4 w-4" />
                   {editedArticle.is_archive ? "Archived" : "Archive"}
                 </Button>
               </div>
@@ -349,7 +349,7 @@ export function ViewArticleSheet({
               >
                 <AlertDialogTrigger asChild>
                   <Button variant="destructive" size="sm" disabled={isLoading}>
-                    <Trash2Icon className="h-4 w-4 mr-1" />
+                    <Trash2Icon className="h-4 w-4" />
                     Delete
                   </Button>
                 </AlertDialogTrigger>
@@ -370,7 +370,7 @@ export function ViewArticleSheet({
                     >
                       {isLoading ? (
                         <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          <Loader2 className="h-4 w-4 animate-spin" />
                           Deleting...
                         </>
                       ) : (
