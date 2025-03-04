@@ -1,28 +1,19 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useState } from "react";
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetFooter,
 } from "@/components/ui/sheet";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  PlusIcon,
-  StickyNoteIcon,
-  Loader2,
-  CircleCheckBig,
-} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
+import { MarkdownEditor } from "@/components/global/MarkdownEditor";
 
-// Define the data structure for a new note
 interface NewNoteData {
   title: string;
   content: string;
@@ -40,37 +31,19 @@ export function AddNoteSheet({
   isOpen,
   onOpenChange,
 }: AddNoteSheetProps) {
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const titleInputRef = useRef<HTMLInputElement>(null);
   const [newNote, setNewNote] = useState<NewNoteData>({
     title: "",
     content: "",
     tags: [],
   });
-
-  const [isLoading, setIsLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
   const [newTag, setNewTag] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isOpen_, setIsOpen_] = useState(false);
 
-  // Focus on title input when sheet opens
-  useEffect(() => {
-    const sheetOpen = isOpen !== undefined ? isOpen : isSheetOpen;
+  // Use controlled or uncontrolled state based on props
+  const isSheetOpen = isOpen !== undefined ? isOpen : isOpen_;
+  const setIsSheetOpen = onOpenChange || setIsOpen_;
 
-    if (sheetOpen) {
-      // Use multiple attempts with increasing delays to ensure focus
-      const attempts = [100, 200, 300, 500];
-
-      attempts.forEach((delay) => {
-        setTimeout(() => {
-          if (titleInputRef.current) {
-            titleInputRef.current.focus();
-          }
-        }, delay);
-      });
-    }
-  }, [isOpen, isSheetOpen]);
-
-  // Reset form when sheet is closed
   const resetForm = () => {
     setNewNote({
       title: "",
@@ -78,56 +51,49 @@ export function AddNoteSheet({
       tags: [],
     });
     setNewTag("");
-    setSuccess(false);
+    setIsLoading(false);
   };
 
-  // Handle sheet open/close
   const handleSheetOpenChange = (open: boolean) => {
-    setIsSheetOpen(open);
-    onOpenChange?.(open);
-
-    if (open) {
-      // Focus the title input when the sheet opens
-      setTimeout(() => {
-        titleInputRef.current?.focus();
-      }, 100);
-    } else {
+    if (!open) {
+      // Reset form when closing
       resetForm();
     }
+    setIsSheetOpen(open);
   };
 
-  // Handle adding a note
   const handleAddNote = async () => {
-    if (!newNote.title || !newNote.content) return;
+    if (!newNote.title.trim() || !newNote.content.trim()) {
+      return;
+    }
 
     setIsLoading(true);
     try {
-      const success = await onAddNote(newNote);
+      const success = await onAddNote({
+        title: newNote.title,
+        content: newNote.content,
+        tags: newNote.tags,
+      });
+
       if (success) {
-        setSuccess(true);
-        setTimeout(() => {
-          handleSheetOpenChange(false);
-        }, 1500);
+        handleSheetOpenChange(false);
       }
-    } catch (error) {
-      console.error("Error adding note:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Handle adding a tag
   const handleAddTag = () => {
-    if (newTag && !newNote.tags.includes(newTag)) {
-      setNewNote({
-        ...newNote,
-        tags: [...newNote.tags, newTag],
-      });
-      setNewTag("");
+    if (!newTag.trim() || newNote.tags.includes(newTag.trim())) {
+      return;
     }
+    setNewNote({
+      ...newNote,
+      tags: [...newNote.tags, newTag.trim()],
+    });
+    setNewTag("");
   };
 
-  // Handle removing a tag
   const handleRemoveTag = (tagToRemove: string) => {
     setNewNote({
       ...newNote,
@@ -136,24 +102,17 @@ export function AddNoteSheet({
   };
 
   return (
-    <Sheet
-      open={isOpen !== undefined ? isOpen : isSheetOpen}
-      onOpenChange={handleSheetOpenChange}
-    >
-      <SheetContent className="sm:max-w-md">
+    <Sheet open={isSheetOpen} onOpenChange={handleSheetOpenChange}>
+      <SheetContent>
         <SheetHeader>
           <SheetTitle>Add New Note</SheetTitle>
-          <SheetDescription>
-            Create a new note with title, content, and optional tags.
-          </SheetDescription>
         </SheetHeader>
 
-        <div className="grid gap-4 px-4">
+        <div className="grid gap-4 py-4">
           <div className="grid gap-2">
             <Label htmlFor="title">Title</Label>
             <Input
               id="title"
-              ref={titleInputRef}
               value={newNote.title}
               onChange={(e) =>
                 setNewNote({ ...newNote, title: e.target.value })
@@ -164,14 +123,12 @@ export function AddNoteSheet({
 
           <div className="grid gap-2">
             <Label htmlFor="content">Content</Label>
-            <Textarea
-              id="content"
+            <MarkdownEditor
               value={newNote.content}
-              onChange={(e) =>
-                setNewNote({ ...newNote, content: e.target.value })
-              }
+              onChange={(value) => setNewNote({ ...newNote, content: value })}
               placeholder="Write your note here..."
-              className="min-h-[150px]"
+              minHeight="150px"
+              disabled={isLoading}
             />
           </div>
 
@@ -199,45 +156,37 @@ export function AddNoteSheet({
                 Add
               </Button>
             </div>
+
             {newNote.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
+              <div className="flex flex-wrap gap-1 mt-2">
                 {newNote.tags.map((tag) => (
-                  <Badge
-                    key={tag}
-                    variant="secondary"
-                    className="flex items-center gap-1"
-                  >
+                  <Badge key={tag} variant="secondary">
                     {tag}
-                    <X
-                      className="h-3 w-3 cursor-pointer"
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-4 w-4 ml-1 p-0"
                       onClick={() => handleRemoveTag(tag)}
-                    />
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
                   </Badge>
                 ))}
               </div>
             )}
           </div>
-        </div>
-        <SheetFooter>
+
           <Button
             onClick={handleAddNote}
-            disabled={isLoading || !newNote.title || !newNote.content}
+            disabled={
+              isLoading || !newNote.title.trim() || !newNote.content.trim()
+            }
+            className="mt-4"
           >
-            {isLoading ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Adding Note...
-              </>
-            ) : success ? (
-              <>
-                <CircleCheckBig className="h-4 w-4" />
-                Note Added!
-              </>
-            ) : (
-              <>Add Note</>
-            )}
+            {isLoading ? "Adding..." : "Add Note"}
           </Button>
-        </SheetFooter>
+        </div>
       </SheetContent>
     </Sheet>
   );
