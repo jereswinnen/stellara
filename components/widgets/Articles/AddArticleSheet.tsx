@@ -255,7 +255,7 @@ export function AddArticleSheet({
                       className="text-muted-foreground hover:text-foreground"
                       disabled={isLoading}
                     >
-                      <X className="h-3 w-3" />
+                      <X className="cursor-pointer h-3 w-3" />
                     </button>
                   </Badge>
                 ))}
