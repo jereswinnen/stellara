@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { UpdateLinkData } from "@/hooks/useLinks";
 import { Link } from "@/lib/supabase";
+import { extractDomain } from "@/lib/utils";
 import { TagInput } from "@/components/global/TagInput";
 import { useTags } from "@/components/providers/TagsProvider";
 import {
@@ -184,9 +185,6 @@ export function ViewLinkSheet({
         open={isOpen !== undefined ? isOpen : isSheetOpen}
         onOpenChange={handleSheetOpenChange}
       >
-        {/* Only show the trigger if provided */}
-        {trigger && <div onClick={(e) => e.preventDefault()}>{trigger}</div>}
-
         <SheetContent className="overflow-y-auto">
           <SheetHeader className="sticky top-0 bg-background/80 backdrop-blur-lg border-b border-border">
             <SheetTitle>Link Details</SheetTitle>
@@ -211,7 +209,7 @@ export function ViewLinkSheet({
               </div>
               <div className="flex-1">
                 <div className="flex justify-between">
-                  <p className="text-sm font-medium line-clamp-2">
+                  <p className="text-sm font-medium line-clamp-2" tabIndex={0}>
                     {link.title}
                   </p>
                   <TooltipProvider>
@@ -222,6 +220,8 @@ export function ViewLinkSheet({
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex-shrink-0"
+                          tabIndex={-1}
+                          onClick={(e) => e.stopPropagation()}
                         >
                           <SquareArrowOutUpRight className="size-4 text-muted-foreground hover:text-primary" />
                         </a>
@@ -233,7 +233,7 @@ export function ViewLinkSheet({
                   </TooltipProvider>
                 </div>
                 <p className="text-xs text-muted-foreground line-clamp-1">
-                  {link.url}
+                  {extractDomain(link.url)}
                 </p>
               </div>
             </div>

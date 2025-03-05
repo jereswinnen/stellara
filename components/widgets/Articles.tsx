@@ -15,6 +15,7 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Article } from "@/lib/supabase";
+import { extractDomain } from "@/lib/utils";
 import {
   TooltipContent,
   TooltipTrigger,
@@ -179,7 +180,7 @@ export function Articles() {
                       </TooltipProvider>
                     </div>
                     <p className="text-xs text-muted-foreground line-clamp-1">
-                      {article.url}
+                      {extractDomain(article.url)}
                     </p>
                   </div>
                   {article.tags && article.tags.length > 0 && (

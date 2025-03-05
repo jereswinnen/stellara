@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { UpdateArticleData } from "@/hooks/useArticles";
 import { Article } from "@/lib/supabase";
+import { extractDomain } from "@/lib/utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -243,7 +244,10 @@ export function ViewArticleSheet({
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline justify-between">
-                      <p className="text-sm font-medium line-clamp-2">
+                      <p
+                        className="text-sm font-medium line-clamp-2"
+                        tabIndex={0}
+                      >
                         {article.title}
                       </p>
                       <TooltipProvider>
@@ -254,6 +258,8 @@ export function ViewArticleSheet({
                               target="_blank"
                               rel="noopener noreferrer"
                               className="flex-shrink-0"
+                              tabIndex={-1}
+                              onClick={(e) => e.stopPropagation()}
                             >
                               <SquareArrowOutUpRight className="size-4 text-muted-foreground hover:text-primary" />
                             </a>
@@ -265,7 +271,7 @@ export function ViewArticleSheet({
                       </TooltipProvider>
                     </div>
                     <p className="text-xs text-muted-foreground truncate">
-                      {article.url}
+                      {extractDomain(article.url)}
                     </p>
                   </div>
                 </div>

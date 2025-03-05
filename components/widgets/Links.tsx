@@ -15,6 +15,7 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@/lib/supabase";
+import { extractDomain } from "@/lib/utils";
 import { TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Tooltip } from "@/components/ui/tooltip";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -170,7 +171,7 @@ export function Links() {
                       </TooltipProvider>
                     </div>
                     <p className="text-xs text-muted-foreground line-clamp-1">
-                      {link.url}
+                      {extractDomain(link.url)}
                     </p>
                   </div>
                   {link.tags && link.tags.length > 0 && (

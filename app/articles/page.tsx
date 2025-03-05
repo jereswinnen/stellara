@@ -10,6 +10,7 @@ import { articleEvents } from "@/components/widgets/Articles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { extractDomain } from "@/lib/utils";
 import {
   BookOpenIcon,
   PlusIcon,
@@ -186,7 +187,7 @@ export default function ArticlesPage() {
                       {article.title}
                     </h3>
                     <p className="text-sm text-muted-foreground line-clamp-1 mb-2">
-                      {article.url}
+                      {extractDomain(article.url)}
                     </p>
                     {article.tags && article.tags.length > 0 && (
                       <div className="flex flex-wrap gap-1">
