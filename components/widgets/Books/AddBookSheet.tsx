@@ -27,7 +27,6 @@ import {
   SearchIcon,
   Loader2,
   CircleCheckBig,
-  X,
 } from "lucide-react";
 import { BookStatus, NewBookData } from "@/hooks/useBooks";
 import {

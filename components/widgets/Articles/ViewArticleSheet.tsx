@@ -17,9 +17,9 @@ import {
   StarIcon,
   ArchiveIcon,
   Trash2Icon,
-  ExternalLinkIcon,
   Loader2,
   CircleCheckBig,
+  SquareArrowOutUpRight,
 } from "lucide-react";
 import { UpdateArticleData } from "@/hooks/useArticles";
 import { Article } from "@/lib/supabase";
@@ -37,6 +37,12 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TagInput } from "@/components/global/TagInput";
 import { useTags } from "@/components/providers/TagsProvider";
+import {
+  TooltipContent,
+  TooltipTrigger,
+  TooltipProvider,
+  Tooltip,
+} from "@/components/ui/tooltip";
 
 interface ViewArticleSheetProps {
   article: Article;
@@ -236,38 +242,44 @@ export function ViewArticleSheet({
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex justify-between">
+                    <div className="flex items-baseline justify-between">
                       <p className="text-sm font-medium line-clamp-2">
                         {article.title}
                       </p>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <a
+                              href={article.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex-shrink-0"
+                            >
+                              <SquareArrowOutUpRight className="size-4 text-muted-foreground hover:text-primary" />
+                            </a>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Open article</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                     </div>
                     <p className="text-xs text-muted-foreground truncate">
                       {article.url}
                     </p>
-                    <div className="mt-2">
-                      <a
-                        href={article.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-xs flex items-center gap-1 text-primary hover:underline"
-                      >
-                        <ExternalLinkIcon className="h-3 w-3" />
-                        Open article
-                      </a>
-                    </div>
                   </div>
                 </div>
 
                 {/* Article content */}
-                <div className="border rounded-lg p-6 max-h-[60vh] overflow-y-auto bg-card">
+                <div className="p-4 border rounded-lg max-h-[60vh] overflow-y-auto">
                   {article.body ? (
                     <div
-                      className="prose prose-sm max-w-none dark:prose-invert article-content"
+                      className="article-content"
                       dangerouslySetInnerHTML={{ __html: article.body }}
                     />
                   ) : (
-                    <div className="flex flex-col items-center justify-center py-8 text-center">
-                      <BookOpenIcon className="h-8 w-8 text-muted-foreground mb-2" />
+                    <div className="flex flex-col gap-2 items-center justify-center py-6 text-center">
+                      <BookOpenIcon className="size-8 text-muted-foreground" />
                       <p className="text-muted-foreground">
                         No content available
                       </p>

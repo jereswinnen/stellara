@@ -13,11 +13,9 @@ import {
   SheetTrigger,
   SheetFooter,
 } from "@/components/ui/sheet";
-import { PlusIcon, LinkIcon, Loader2, CircleCheckBig } from "lucide-react";
+import { PlusIcon, Loader2, CircleCheckBig } from "lucide-react";
 import { NewLinkData } from "@/hooks/useLinks";
 import { fetchUrlMetadata } from "@/lib/urlMetadata";
-import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react";
 import { TagInput } from "@/components/global/TagInput";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useTags } from "@/components/providers/TagsProvider";

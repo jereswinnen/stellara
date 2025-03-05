@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,14 +17,12 @@ import {
   StarIcon,
   ArchiveIcon,
   Trash2Icon,
-  ExternalLinkIcon,
   Loader2,
-  X,
   CircleCheckBig,
+  SquareArrowOutUpRight,
 } from "lucide-react";
 import { UpdateLinkData } from "@/hooks/useLinks";
 import { Link } from "@/lib/supabase";
-import { Badge } from "@/components/ui/badge";
 import { TagInput } from "@/components/global/TagInput";
 import { useTags } from "@/components/providers/TagsProvider";
 import {
@@ -38,6 +36,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  Tooltip,
+  TooltipProvider,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
 
 interface ViewLinkSheetProps {
   link: Link;
@@ -191,40 +195,46 @@ export function ViewLinkSheet({
 
           <div className="space-y-4 px-4">
             {/* Link preview */}
-            <div className="flex items-start space-x-3 border rounded-lg p-3">
-              <div className="flex-shrink-0 mt-1">
+            <div className="flex items-start gap-3 border rounded-lg p-3">
+              <div className="flex-shrink-0">
                 {link.image ? (
                   <img
                     src={link.image}
                     alt={link.title}
-                    className="h-12 w-12 object-cover rounded"
+                    className="size-12 object-cover rounded"
                   />
                 ) : (
-                  <div className="h-12 w-12 bg-muted flex items-center justify-center rounded">
-                    <LinkIcon className="h-6 w-6 text-muted-foreground" />
+                  <div className="size-12 bg-muted flex items-center justify-center rounded">
+                    <LinkIcon className="size-6 text-muted-foreground" />
                   </div>
                 )}
               </div>
-              <div className="flex-1 min-w-0">
+              <div className="flex-1">
                 <div className="flex justify-between">
                   <p className="text-sm font-medium line-clamp-2">
                     {link.title}
                   </p>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <a
+                          href={link.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-shrink-0"
+                        >
+                          <SquareArrowOutUpRight className="size-4 text-muted-foreground hover:text-primary" />
+                        </a>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Open link</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </div>
-                <p className="text-xs text-muted-foreground truncate">
+                <p className="text-xs text-muted-foreground line-clamp-1">
                   {link.url}
                 </p>
-                <div className="mt-2">
-                  <a
-                    href={link.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs flex items-center gap-1 text-primary hover:underline"
-                  >
-                    <ExternalLinkIcon className="h-3 w-3" />
-                    Open link
-                  </a>
-                </div>
               </div>
             </div>
 

@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   LinkIcon,
   PlusIcon,
-  ExternalLinkIcon,
   Loader2,
   SquareArrowOutUpRight,
 } from "lucide-react";
@@ -161,7 +160,7 @@ export function Links() {
                               onClick={(e) => e.stopPropagation()}
                               className="flex-shrink-0"
                             >
-                              <SquareArrowOutUpRight className="size-4 text-muted-foreground" />
+                              <SquareArrowOutUpRight className="size-4 text-muted-foreground hover:text-primary" />
                             </a>
                           </TooltipTrigger>
                           <TooltipContent>

@@ -167,7 +167,7 @@ export function Articles() {
                               onClick={(e) => e.stopPropagation()}
                               className="flex-shrink-0"
                             >
-                              <SquareArrowOutUpRight className="size-4 text-muted-foreground" />
+                              <SquareArrowOutUpRight className="size-4 text-muted-foreground hover:text-primary" />
                             </a>
                           </TooltipTrigger>
                           <TooltipContent>
