@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Sheet,
   SheetContent,
@@ -55,6 +55,15 @@ export function ViewNoteSheet({
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+
+  // Update editedNote when the note prop changes
+  useEffect(() => {
+    setEditedNote({
+      ...note,
+      tags: note.tags || [],
+    });
+    setHasChanges(false);
+  }, [note]);
 
   // Create a user object from the note's user_id
   const userObj = note?.user_id ? { id: note.user_id } : null;
