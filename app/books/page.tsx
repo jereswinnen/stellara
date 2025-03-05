@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { Books } from "@/components/widgets/Books/Books";
+import { Books } from "@/components/widgets/Books";
 
 export default function BooksPage() {
   const { user, loading } = useAuth();

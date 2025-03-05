@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { Links } from "@/components/widgets/Links/Links";
+import { Links } from "@/components/widgets/Links";
 
 export default function LinksPage() {
   const { user, loading } = useAuth();

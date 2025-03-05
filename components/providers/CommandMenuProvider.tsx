@@ -16,10 +16,10 @@ import {
   CommandItem,
   CommandShortcut,
 } from "@/components/ui/command";
-import { AddArticleSheet } from "@/components/widgets/Articles/AddArticleSheet";
-import { AddBookSheet } from "@/components/widgets/Books/AddBookSheet";
-import { AddLinkSheet } from "@/components/widgets/Links/AddLinkSheet";
-import { AddNoteSheet } from "@/components/widgets/Notes/AddNoteSheet";
+import { AddArticleSheet } from "@/components/global/Sheets/AddArticleSheet";
+import { AddBookSheet } from "@/components/global/Sheets/AddBookSheet";
+import { AddLinkSheet } from "@/components/global/Sheets/AddLinkSheet";
+import { AddNoteSheet } from "@/components/global/Sheets/AddNoteSheet";
 import { useArticles } from "@/hooks/useArticles";
 import { useBooks } from "@/hooks/useBooks";
 import { useLinks } from "@/hooks/useLinks";
@@ -35,8 +35,8 @@ import { NewBookData } from "@/hooks/useBooks";
 import { NewLinkData } from "@/hooks/useLinks";
 import { NewArticleData } from "@/hooks/useArticles";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { linkEvents } from "@/components/widgets/Links/Links";
-import { articleEvents } from "@/components/widgets/Articles/Articles";
+import { articleEvents } from "@/components/widgets/Articles";
+import { linkEvents } from "@/components/widgets/Links";
 import { useRouter } from "next/navigation";
 
 // Create a simple event emitter for book list refresh

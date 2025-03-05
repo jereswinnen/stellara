@@ -4,12 +4,12 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { DateTime } from "@/components/widgets/DateTime";
-import { Notes } from "@/components/widgets/Notes/Notes";
+import { Notes } from "@/components/widgets/Notes";
 import { PokemonOfTheDay } from "@/components/widgets/PokemonOfTheDay";
 import { OnThisDay } from "@/components/widgets/OnThisDay";
-import { Books } from "@/components/widgets/Books/Books";
-import { Links } from "@/components/widgets/Links/Links";
-import { Articles } from "@/components/widgets/Articles/Articles";
+import { Books } from "@/components/widgets/Books";
+import { Links } from "@/components/widgets/Links";
+import { Articles } from "@/components/widgets/Articles";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {

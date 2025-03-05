@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { Notes } from "@/components/widgets/Notes/Notes";
+import { Notes } from "@/components/widgets/Notes";
 
 export default function NotesPage() {
   const { user, loading } = useAuth();

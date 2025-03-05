@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpenIcon, Loader2, PlusIcon } from "lucide-react";
-import { ViewBookSheet } from "@/components/widgets/Books/ViewBookSheet";
+import { ViewBookSheet } from "@/components/global/Sheets/ViewBookSheet";
 import { useBooks } from "@/hooks/useBooks";
 import {
   useCommandMenu,
