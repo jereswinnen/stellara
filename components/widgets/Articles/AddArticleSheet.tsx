@@ -10,19 +10,11 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
   SheetFooter,
 } from "@/components/ui/sheet";
-import {
-  PlusIcon,
-  BookOpenIcon,
-  Loader2,
-  CircleCheckBig,
-  X,
-} from "lucide-react";
+import { Loader2, CircleCheckBig } from "lucide-react";
 import { NewArticleData } from "@/hooks/useArticles";
 import { fetchUrlMetadata } from "@/lib/urlMetadata";
-import { Badge } from "@/components/ui/badge";
 import { TagInput } from "@/components/global/TagInput";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useTags } from "@/components/providers/TagsProvider";

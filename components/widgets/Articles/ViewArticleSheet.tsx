@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -19,12 +19,10 @@ import {
   Trash2Icon,
   ExternalLinkIcon,
   Loader2,
-  X,
   CircleCheckBig,
 } from "lucide-react";
 import { UpdateArticleData } from "@/hooks/useArticles";
 import { Article } from "@/lib/supabase";
-import { Badge } from "@/components/ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -204,10 +202,7 @@ export function ViewArticleSheet({
         open={isOpen !== undefined ? isOpen : isSheetOpen}
         onOpenChange={handleSheetOpenChange}
       >
-        {/* Only show the trigger if provided */}
-        {trigger && <div onClick={(e) => e.preventDefault()}>{trigger}</div>}
-
-        <SheetContent className="sm:max-w-xl w-full overflow-y-auto">
+        <SheetContent className="min-w-screen md:min-w-auto md:max-w-2xl overflow-y-auto">
           <SheetHeader className="sticky top-0 bg-background/80 backdrop-blur-lg border-b border-border">
             <SheetTitle>Article Details</SheetTitle>
             <SheetDescription>View and edit article details</SheetDescription>

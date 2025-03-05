@@ -109,7 +109,7 @@ export function AddNoteSheet({
 
   return (
     <Sheet open={isSheetOpen} onOpenChange={handleSheetOpenChange}>
-      <SheetContent className="overflow-y-auto">
+      <SheetContent className="min-w-screen md:min-w-auto md:max-w-2xl overflow-y-auto">
         <SheetHeader className="sticky top-0 bg-background/80 backdrop-blur-lg border-b border-border">
           <SheetTitle>Add New Note</SheetTitle>
         </SheetHeader>
