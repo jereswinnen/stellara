@@ -170,7 +170,10 @@ export function Notes() {
 
         <div className="space-y-4">
           {loading ? (
-            <p className="text-sm text-muted-foreground">Loading notes...</p>
+            <div className="flex gap-2 items-center justify-center">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <p className="text-sm text-muted-foreground">Loading notes...</p>
+            </div>
           ) : notes.length === 0 ? (
             <p className="text-sm text-muted-foreground">No notes yet</p>
           ) : (

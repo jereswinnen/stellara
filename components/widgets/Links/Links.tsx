@@ -1,7 +1,13 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { LinkIcon, PlusIcon, ExternalLinkIcon } from "lucide-react";
+import {
+  LinkIcon,
+  PlusIcon,
+  ExternalLinkIcon,
+  Loader2,
+  SquareArrowOutUpRight,
+} from "lucide-react";
 import { AddLinkSheet } from "@/components/widgets/Links/AddLinkSheet";
 import { ViewLinkSheet } from "@/components/widgets/Links/ViewLinkSheet";
 import { useLinks } from "@/hooks/useLinks";
@@ -102,71 +108,74 @@ export function Links() {
 
   return (
     <Card className="h-full">
-      <CardHeader className="flex flex-row items-center justify-between pb-2">
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-xl font-bold">Links</CardTitle>
         <Button
           size="sm"
-          className="h-8 w-8 p-0"
+          className="size-8"
           onClick={() => setIsAddLinkOpen(true)}
         >
-          <PlusIcon className="h-4 w-4" />
+          <PlusIcon className="size-4" />
         </Button>
       </CardHeader>
       <CardContent>
         {loading ? (
-          <div className="flex justify-center items-center h-40">
-            <p>Loading links...</p>
+          <div className="flex gap-2 items-center justify-center">
+            <Loader2 className="size-4 animate-spin" />
+            <p className="text-sm text-muted-foreground">Loading links...</p>
           </div>
         ) : recentLinks.length > 0 ? (
           <div className="space-y-3">
             {recentLinks.map((link) => (
               <div
                 key={link.id}
-                className="flex items-start space-x-3 border rounded-md p-3 hover:bg-accent/50 transition-colors cursor-pointer"
+                className="flex gap-3 border rounded-md p-3 hover:bg-accent/50 transition-colors cursor-pointer"
                 onClick={() => openViewLinkSheet(link)}
               >
-                <div className="flex-shrink-0 mt-1">
+                <div className="flex-shrink-0">
                   {link.image ? (
                     <img
                       src={link.image}
                       alt={link.title}
-                      className="h-10 w-10 object-cover rounded"
+                      className="size-10 object-cover rounded"
                     />
                   ) : (
-                    <div className="h-10 w-10 bg-muted flex items-center justify-center rounded">
-                      <LinkIcon className="h-5 w-5 text-muted-foreground" />
+                    <div className="size-10 bg-muted flex items-center justify-center rounded">
+                      <LinkIcon className="size-5 text-muted-foreground" />
                     </div>
                   )}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between">
-                    <p className="text-sm font-medium line-clamp-1">
-                      {link.title}
+                <div className="flex flex-1 flex-col gap-2">
+                  <div className="flex flex-col">
+                    <div className="flex justify-between">
+                      <p className="text-sm font-medium line-clamp-1">
+                        {link.title}
+                      </p>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <a
+                              href={link.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              onClick={(e) => e.stopPropagation()}
+                              className="flex-shrink-0"
+                            >
+                              <SquareArrowOutUpRight className="size-4 text-muted-foreground" />
+                            </a>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Open link</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    <p className="text-xs text-muted-foreground line-clamp-1">
+                      {link.url}
                     </p>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <a
-                            href={link.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className="flex-shrink-0"
-                          >
-                            <ExternalLinkIcon className="h-4 w-4 text-muted-foreground" />
-                          </a>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Open link</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
                   </div>
-                  <p className="text-xs text-muted-foreground truncate">
-                    {link.url}
-                  </p>
                   {link.tags && link.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-1">
+                    <div className="flex flex-wrap gap-1">
                       {link.tags.map((tag) => (
                         <Badge
                           key={tag}
@@ -183,29 +192,26 @@ export function Links() {
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center h-40 text-center">
-            <LinkIcon className="h-8 w-8 text-muted-foreground mb-2" />
+          <div className="flex flex-col gap-2 items-center justify-center text-center">
+            <LinkIcon className="size-8 text-muted-foreground" />
             <p className="text-muted-foreground">No links saved yet</p>
             <Button
               variant="outline"
               size="sm"
-              className="mt-2"
               onClick={() => setIsAddLinkOpen(true)}
             >
-              <PlusIcon className="mr-1 h-4 w-4" />
+              <PlusIcon className="size-4" />
               Add your first link
             </Button>
           </div>
         )}
 
-        {/* AddLinkSheet - always render it once, controlled by isAddLinkOpen */}
         <AddLinkSheet
           onAddLink={handleAddLink}
           isOpen={isAddLinkOpen}
           onOpenChange={setIsAddLinkOpen}
         />
 
-        {/* ViewLinkSheet - only render when a link is selected */}
         {selectedLink && (
           <ViewLinkSheet
             link={selectedLink}
