@@ -28,6 +28,7 @@ import { Note } from "@/lib/supabase";
 import { UpdateNoteData } from "@/hooks/useNotes";
 import { MarkdownEditor } from "@/components/global/MarkdownEditor";
 import { TagInput } from "@/components/global/TagInput";
+import { useTags } from "@/components/providers/TagsProvider";
 
 interface ViewNoteSheetProps {
   note: Note;
@@ -48,12 +49,18 @@ export function ViewNoteSheet({
 }: ViewNoteSheetProps) {
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [editedNote, setEditedNote] = useState({
-    content: note.content,
+    ...note,
     tags: note.tags || [],
   });
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+
+  // Create a user object from the note's user_id
+  const userObj = note?.user_id ? { id: note.user_id } : null;
+
+  // Get all existing tags from the Tags context
+  const { allTags, addTag } = useTags();
 
   // Check if there are changes
   const checkForChanges = (updatedNote = editedNote) => {
@@ -70,7 +77,7 @@ export function ViewNoteSheet({
     if (!open) {
       // Reset to original content when closing
       setEditedNote({
-        content: note.content,
+        ...note,
         tags: note.tags || [],
       });
       setHasChanges(false);
@@ -111,6 +118,9 @@ export function ViewNoteSheet({
   };
 
   const handleAddTag = (tag: string) => {
+    // Add to the global tags list if it's a new tag
+    addTag(tag);
+
     const updatedNote = {
       ...editedNote,
       tags: [...editedNote.tags, tag],
@@ -161,7 +171,9 @@ export function ViewNoteSheet({
                 tags={editedNote.tags}
                 onAddTag={handleAddTag}
                 onRemoveTag={handleRemoveTag}
+                existingTags={allTags}
                 disabled={isLoading}
+                placeholder="Add a tag (type to see suggestions)"
               />
             </div>
 

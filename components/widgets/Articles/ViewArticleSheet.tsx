@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TagInput } from "@/components/global/TagInput";
+import { useTags } from "@/components/providers/TagsProvider";
 
 interface ViewArticleSheetProps {
   article: Article;
@@ -68,6 +69,12 @@ export function ViewArticleSheet({
   });
   const [hasChanges, setHasChanges] = useState(false);
   const [activeTab, setActiveTab] = useState("content");
+
+  // Create a user object from the article's user_id
+  const userObj = article?.user_id ? { id: article.user_id } : null;
+
+  // Get all existing tags from the Tags context
+  const { allTags, addTag } = useTags();
 
   // Reset form when article changes
   useEffect(() => {
@@ -174,6 +181,9 @@ export function ViewArticleSheet({
 
   // Handle adding a tag
   const handleAddTag = (tag: string) => {
+    // Add to the global tags list if it's a new tag
+    addTag(tag);
+
     setEditedArticle({
       ...editedArticle,
       tags: [...(editedArticle.tags || []), tag],
@@ -293,7 +303,9 @@ export function ViewArticleSheet({
                     tags={editedArticle.tags || []}
                     onAddTag={handleAddTag}
                     onRemoveTag={handleRemoveTag}
+                    existingTags={allTags}
                     disabled={isLoading}
+                    placeholder="Add a tag (type to see suggestions)"
                   />
                 </div>
 

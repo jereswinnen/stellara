@@ -19,6 +19,8 @@ import { fetchUrlMetadata } from "@/lib/urlMetadata";
 import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
 import { TagInput } from "@/components/global/TagInput";
+import { useAuth } from "@/components/providers/AuthProvider";
+import { useTags } from "@/components/providers/TagsProvider";
 
 interface AddLinkSheetProps {
   onAddLink: (linkData: NewLinkData) => Promise<boolean>;
@@ -43,21 +45,23 @@ export function AddLinkSheet({
   const [success, setSuccess] = useState(false);
   const [isFetchingMetadata, setIsFetchingMetadata] = useState(false);
 
+  // Get the current user
+  const { user } = useAuth();
+
+  // Get all existing tags from the Tags context
+  const { allTags, addTag } = useTags();
+
   // Focus on URL input when sheet opens
   useEffect(() => {
     const sheetOpen = isOpen !== undefined ? isOpen : isSheetOpen;
 
     if (sheetOpen) {
-      // Use multiple attempts with increasing delays to ensure focus
-      const attempts = [100, 200, 300, 500];
-
-      attempts.forEach((delay) => {
-        setTimeout(() => {
-          if (urlInputRef.current) {
-            urlInputRef.current.focus();
-          }
-        }, delay);
-      });
+      setTimeout(() => {
+        urlInputRef.current?.focus();
+      }, 100);
+    } else {
+      // Reset form when sheet closes
+      resetForm();
     }
   }, [isOpen, isSheetOpen]);
 
@@ -134,6 +138,9 @@ export function AddLinkSheet({
 
   // Handle adding a tag
   const handleAddTag = (tag: string) => {
+    // Add to the global tags list if it's a new tag
+    addTag(tag);
+
     setNewLink({
       ...newLink,
       tags: [...(newLink.tags || []), tag],
@@ -210,7 +217,9 @@ export function AddLinkSheet({
               tags={newLink.tags || []}
               onAddTag={handleAddTag}
               onRemoveTag={handleRemoveTag}
+              existingTags={allTags}
               disabled={isLoading}
+              placeholder="Add a tag (type to see suggestions)"
             />
           </div>
         </div>

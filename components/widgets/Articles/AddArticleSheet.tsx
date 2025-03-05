@@ -24,6 +24,8 @@ import { NewArticleData } from "@/hooks/useArticles";
 import { fetchUrlMetadata } from "@/lib/urlMetadata";
 import { Badge } from "@/components/ui/badge";
 import { TagInput } from "@/components/global/TagInput";
+import { useAuth } from "@/components/providers/AuthProvider";
+import { useTags } from "@/components/providers/TagsProvider";
 
 interface AddArticleSheetProps {
   onAddArticle: (articleData: NewArticleData) => Promise<boolean>;
@@ -48,21 +50,24 @@ export function AddArticleSheet({
   const [success, setSuccess] = useState(false);
   const [isFetchingMetadata, setIsFetchingMetadata] = useState(false);
 
+  // Get the current user
+  const { user } = useAuth();
+
+  // Get all existing tags from the Tags context
+  const { allTags, addTag } = useTags();
+
   // Focus on URL input when sheet opens
   useEffect(() => {
     const sheetOpen = isOpen !== undefined ? isOpen : isSheetOpen;
 
     if (sheetOpen) {
-      // Use multiple attempts with increasing delays to ensure focus
-      const attempts = [100, 200, 300, 500];
-
-      attempts.forEach((delay) => {
-        setTimeout(() => {
-          if (urlInputRef.current) {
-            urlInputRef.current.focus();
-          }
-        }, delay);
-      });
+      setTimeout(() => {
+        urlInputRef.current?.focus();
+      }, 100);
+    } else {
+      // Reset form when sheet closes
+      resetForm();
+      setSuccess(false);
     }
   }, [isOpen, isSheetOpen]);
 
@@ -140,6 +145,9 @@ export function AddArticleSheet({
 
   // Handle adding a tag
   const handleAddTag = (tag: string) => {
+    // Add to the global tags list if it's a new tag
+    addTag(tag);
+
     setNewArticle({
       ...newArticle,
       tags: [...(newArticle.tags || []), tag],
@@ -216,7 +224,9 @@ export function AddArticleSheet({
               tags={newArticle.tags || []}
               onAddTag={handleAddTag}
               onRemoveTag={handleRemoveTag}
+              existingTags={allTags}
               disabled={isLoading}
+              placeholder="Add a tag (type to see suggestions)"
             />
           </div>
         </div>

@@ -26,6 +26,7 @@ import { UpdateLinkData } from "@/hooks/useLinks";
 import { Link } from "@/lib/supabase";
 import { Badge } from "@/components/ui/badge";
 import { TagInput } from "@/components/global/TagInput";
+import { useTags } from "@/components/providers/TagsProvider";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -58,24 +59,18 @@ export function ViewLinkSheet({
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [editedLink, setEditedLink] = useState<UpdateLinkData>({
-    id: link.id,
-    title: link.title,
-    tags: link.tags || [],
-    is_favorite: link.is_favorite,
-    is_archive: link.is_archive,
-  });
+  const [editedLink, setEditedLink] = useState<Link>({ ...link });
   const [hasChanges, setHasChanges] = useState(false);
+
+  // Create a user object from the link's user_id
+  const userObj = link?.user_id ? { id: link.user_id } : null;
+
+  // Get all existing tags from the Tags context
+  const { allTags, loading: tagsLoading, addTag } = useTags();
 
   // Reset form when link changes
   useEffect(() => {
-    setEditedLink({
-      id: link.id,
-      title: link.title,
-      tags: link.tags || [],
-      is_favorite: link.is_favorite,
-      is_archive: link.is_archive,
-    });
+    setEditedLink({ ...link });
     setHasChanges(false);
   }, [link]);
 
@@ -103,13 +98,7 @@ export function ViewLinkSheet({
 
     if (!open) {
       // Reset form when closing
-      setEditedLink({
-        id: link.id,
-        title: link.title,
-        tags: link.tags || [],
-        is_favorite: link.is_favorite,
-        is_archive: link.is_archive,
-      });
+      setEditedLink({ ...link });
       setHasChanges(false);
     }
   };
@@ -165,6 +154,11 @@ export function ViewLinkSheet({
 
   // Handle adding a tag
   const handleAddTag = (tag: string) => {
+    console.log("Adding tag:", tag);
+
+    // Add to the global tags list if it's a new tag
+    addTag(tag);
+
     setEditedLink({
       ...editedLink,
       tags: [...(editedLink.tags || []), tag],
@@ -173,6 +167,7 @@ export function ViewLinkSheet({
 
   // Handle removing a tag
   const handleRemoveTag = (tagToRemove: string) => {
+    console.log("Removing tag:", tagToRemove);
     setEditedLink({
       ...editedLink,
       tags: editedLink.tags?.filter((tag) => tag !== tagToRemove),
@@ -253,7 +248,9 @@ export function ViewLinkSheet({
                 tags={editedLink.tags || []}
                 onAddTag={handleAddTag}
                 onRemoveTag={handleRemoveTag}
+                existingTags={allTags}
                 disabled={isLoading}
+                placeholder="Add a tag (type to see suggestions)"
               />
             </div>
           </div>

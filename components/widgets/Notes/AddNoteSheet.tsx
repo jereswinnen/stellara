@@ -14,6 +14,8 @@ import { Badge } from "@/components/ui/badge";
 import { X } from "lucide-react";
 import { MarkdownEditor } from "@/components/global/MarkdownEditor";
 import { TagInput } from "@/components/global/TagInput";
+import { useAuth } from "@/components/providers/AuthProvider";
+import { useTags } from "@/components/providers/TagsProvider";
 
 interface NewNoteData {
   title: string;
@@ -43,6 +45,12 @@ export function AddNoteSheet({
   // Use controlled or uncontrolled state based on props
   const isSheetOpen = isOpen !== undefined ? isOpen : isOpen_;
   const setIsSheetOpen = onOpenChange || setIsOpen_;
+
+  // Get the current user
+  const { user } = useAuth();
+
+  // Get all existing tags from the Tags context
+  const { allTags, addTag } = useTags();
 
   const resetForm = () => {
     setNewNote({
@@ -83,6 +91,9 @@ export function AddNoteSheet({
   };
 
   const handleAddTag = (tag: string) => {
+    // Add to the global tags list if it's a new tag
+    addTag(tag);
+
     setNewNote({
       ...newNote,
       tags: [...newNote.tags, tag],
@@ -128,11 +139,14 @@ export function AddNoteSheet({
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="tags">Tags</Label>
             <TagInput
               tags={newNote.tags}
               onAddTag={handleAddTag}
               onRemoveTag={handleRemoveTag}
+              existingTags={allTags}
               disabled={isLoading}
+              placeholder="Add a tag (type to see suggestions)"
             />
           </div>
 

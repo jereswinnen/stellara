@@ -1,10 +1,10 @@
 import "./globals.css";
 import type { Metadata } from "next";
 import { DarkModeProvider } from "@/components/providers/DarkModeProvider";
-import { AuthProvider } from "@/components/providers/AuthProvider";
 import { CommandMenuProvider } from "@/components/providers/CommandMenuProvider";
 import { Bricolage_Grotesque } from "next/font/google";
 import { Navigation } from "@/components/global/Navigation";
+import { ProvidersWrapper } from "@/components/providers/ProvidersWrapper";
 
 const bricolageGrotesque = Bricolage_Grotesque({
   variable: "--font-bricolage-grotesque",
@@ -25,7 +25,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${bricolageGrotesque.variable} antialiased`}>
-        <AuthProvider>
+        <ProvidersWrapper>
           <DarkModeProvider
             attribute="class"
             defaultTheme="system"
@@ -37,7 +37,7 @@ export default function RootLayout({
               <main className="min-h-screen">{children}</main>
             </CommandMenuProvider>
           </DarkModeProvider>
-        </AuthProvider>
+        </ProvidersWrapper>
       </body>
     </html>
   );
