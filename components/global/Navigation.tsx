@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import {
   Menubar,
@@ -22,7 +21,7 @@ export function Navigation() {
   } = useCommandMenu();
 
   return (
-    <Menubar className="rounded-none border-b border-none px-2 lg:px-4">
+    <Menubar className="sticky top-0 z-50 mx-auto bg-background/80 backdrop-blur-lg">
       <MenubarMenu>
         <MenubarTrigger className="font-bold">Home</MenubarTrigger>
         <MenubarContent>

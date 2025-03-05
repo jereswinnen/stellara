@@ -31,7 +31,7 @@ export default function Home() {
   }
 
   return (
-    <div className="container mx-auto p-8">
+    <div className="container mx-auto py-8">
       <header className="mb-8">
         <div className="flex justify-between items-center">
           <div>
