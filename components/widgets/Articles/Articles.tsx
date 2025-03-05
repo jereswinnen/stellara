@@ -128,7 +128,7 @@ export function Articles() {
             {recentArticles.map((article) => (
               <div
                 key={article.id}
-                className="flex items-start space-x-3 border rounded-lg p-3 hover:bg-accent/50 transition-colors cursor-pointer"
+                className="flex items-start space-x-3 border rounded-md p-3 hover:bg-accent/50 transition-colors cursor-pointer"
                 onClick={() => openViewArticleSheet(article)}
               >
                 <div className="flex-shrink-0 mt-1">

@@ -86,7 +86,7 @@ export function Books() {
             {currentlyReadingBooks.map((book) => (
               <div
                 key={book.id}
-                className="flex items-center space-x-4 border rounded-lg p-3 cursor-pointer hover:bg-accent/50 transition-colors"
+                className="flex items-center space-x-4 border rounded-md p-3 cursor-pointer hover:bg-accent/50 transition-colors"
                 onClick={() => openViewBookSheet(book)}
               >
                 <div className="flex-shrink-0">

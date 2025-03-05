@@ -122,7 +122,7 @@ export function Links() {
             {recentLinks.map((link) => (
               <div
                 key={link.id}
-                className="flex items-start space-x-3 border rounded-lg p-3 hover:bg-accent/50 transition-colors cursor-pointer"
+                className="flex items-start space-x-3 border rounded-md p-3 hover:bg-accent/50 transition-colors cursor-pointer"
                 onClick={() => openViewLinkSheet(link)}
               >
                 <div className="flex-shrink-0 mt-1">

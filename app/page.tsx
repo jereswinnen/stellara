@@ -66,7 +66,7 @@ export default function Home() {
         </div>
 
         {/* Notes Module */}
-        <div className="lg:col-span-3">
+        <div className="col-span-full lg:col-span-3">
           <Notes />
         </div>
 

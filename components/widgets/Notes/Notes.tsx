@@ -11,7 +11,7 @@ import { ViewNoteSheet } from "@/components/widgets/Notes/ViewNoteSheet";
 import { AddNoteSheet } from "@/components/widgets/Notes/AddNoteSheet";
 import { MarkdownEditor } from "@/components/global/MarkdownEditor";
 import { MarkdownContent } from "@/components/global/MarkdownContent";
-import { PlusIcon } from "lucide-react";
+import { Loader2, PlusIcon, CheckCircle2 } from "lucide-react";
 import { Note } from "@/lib/supabase";
 import { noteListEvents } from "@/components/providers/CommandMenuProvider";
 
@@ -24,6 +24,7 @@ export function Notes() {
   const [isViewNoteOpen, setIsViewNoteOpen] = useState(false);
   const [quickNoteContent, setQuickNoteContent] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [success, setSuccess] = useState(false);
 
   // Listen for note list refresh events
   useEffect(() => {
@@ -39,6 +40,7 @@ export function Notes() {
   const handleQuickNoteSave = async () => {
     if (!quickNoteContent.trim()) return;
     setIsSaving(true);
+    setSuccess(false);
 
     try {
       const success = await createNote({
@@ -49,6 +51,12 @@ export function Notes() {
         setQuickNoteContent("");
         // Notify all components that need to refresh their note lists
         noteListEvents.emit();
+        setSuccess(true);
+
+        // Reset success state after 3 seconds
+        setTimeout(() => {
+          setSuccess(false);
+        }, 3000);
       }
     } finally {
       setIsSaving(false);
@@ -118,18 +126,18 @@ export function Notes() {
   };
 
   return (
-    <Card className="col-span-1 row-span-1">
-      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-xl font-bold">Notes</CardTitle>
         <Button
-          size="sm"
-          className="h-8 w-8 p-0"
+          size="icon"
+          className="size-8"
           onClick={() => setIsAddNoteSheetOpen(true)}
         >
-          <PlusIcon className="h-4 w-4" />
+          <PlusIcon className="size-4" />
         </Button>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-6">
         <div className="space-y-2">
           <MarkdownEditor
             value={quickNoteContent}
@@ -139,11 +147,22 @@ export function Notes() {
           />
           <Button
             onClick={handleQuickNoteSave}
-            disabled={isSaving || !quickNoteContent.trim()}
+            disabled={isSaving || !quickNoteContent.trim() || success}
             className="w-full"
-            size="sm"
           >
-            {isSaving ? "Saving..." : "Save Note"}
+            {isSaving ? (
+              <>
+                <Loader2 className="size-4 animate-spin" />
+                Adding Quick Note...
+              </>
+            ) : success ? (
+              <>
+                <CheckCircle2 className="size-4" />
+                Quick Note Added!
+              </>
+            ) : (
+              <>Add Quick Note</>
+            )}
           </Button>
         </div>
 
@@ -155,34 +174,34 @@ export function Notes() {
           ) : notes.length === 0 ? (
             <p className="text-sm text-muted-foreground">No notes yet</p>
           ) : (
-            notes.map((note) => (
-              <div
-                key={note.id}
-                className="cursor-pointer space-y-1 rounded-md border p-3 hover:bg-accent"
-                onClick={() => openViewNoteSheet(note)}
-              >
-                <div className="line-clamp-3 text-sm">
-                  <MarkdownContent content={note.content} />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {notes.map((note) => (
+                <div
+                  key={note.id}
+                  className="p-3 !pt-1 gap-2 cursor-pointer rounded-md border hover:bg-accent/50 transition-colors"
+                  onClick={() => openViewNoteSheet(note)}
+                >
+                  <div className="grow line-clamp-2 text-sm">
+                    <MarkdownContent content={note.content} />
+                  </div>
+                  <p className="shrink-0 text-xs text-muted-foreground">
+                    {formatDistanceToNow(new Date(note.updated_at), {
+                      addSuffix: true,
+                    })}
+                  </p>
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {formatDistanceToNow(new Date(note.updated_at), {
-                    addSuffix: true,
-                  })}
-                </p>
-              </div>
-            ))
+              ))}
+            </div>
           )}
         </div>
       </CardContent>
 
-      {/* AddNoteSheet - always render it once, controlled by isAddNoteSheetOpen */}
       <AddNoteSheet
         onAddNote={handleNewNoteSave}
         isOpen={isAddNoteSheetOpen}
         onOpenChange={setIsAddNoteSheetOpen}
       />
 
-      {/* ViewNoteSheet - only render when a note is selected */}
       {selectedNote && (
         <ViewNoteSheet
           note={selectedNote}
