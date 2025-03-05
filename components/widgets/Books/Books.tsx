@@ -71,7 +71,7 @@ export function Books() {
   return (
     <Card className="h-full">
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-xl font-bold">Books</CardTitle>
+        <CardTitle className="text-xl font-bold">Currently Reading</CardTitle>
         <Button size="sm" className="h-8 w-8 p-0" onClick={openAddBookSheet}>
           <PlusIcon className="h-4 w-4" />
         </Button>

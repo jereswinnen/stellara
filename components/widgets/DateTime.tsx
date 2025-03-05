@@ -36,9 +36,9 @@ export function DateTime() {
   // }
 
   return (
-    <Card className="w-full h-full">
+    <Card className="h-full">
       <CardHeader>
-        <CardTitle className="text-lg font-medium">Date & Time</CardTitle>
+        <CardTitle className="text-xl font-bold">Date & Time</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-2">

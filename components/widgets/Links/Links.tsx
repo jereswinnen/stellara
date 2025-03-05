@@ -109,7 +109,7 @@ export function Links() {
   return (
     <Card className="h-full">
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-xl font-bold">Links</CardTitle>
+        <CardTitle className="text-xl font-bold">Recent Links</CardTitle>
         <Button
           size="sm"
           className="size-8"

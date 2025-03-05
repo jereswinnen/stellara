@@ -115,7 +115,7 @@ export function Articles() {
   return (
     <Card className="h-full">
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-xl font-bold">Articles</CardTitle>
+        <CardTitle className="text-xl font-bold">Recent Articles</CardTitle>
         <Button
           size="sm"
           className="size-8"
