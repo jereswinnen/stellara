@@ -183,8 +183,8 @@ export function ViewLinkSheet({
         {/* Only show the trigger if provided */}
         {trigger && <div onClick={(e) => e.preventDefault()}>{trigger}</div>}
 
-        <SheetContent>
-          <SheetHeader>
+        <SheetContent className="overflow-y-auto">
+          <SheetHeader className="sticky top-0 bg-background/80 backdrop-blur-lg border-b border-border">
             <SheetTitle>Link Details</SheetTitle>
             <SheetDescription>View and edit link details</SheetDescription>
           </SheetHeader>

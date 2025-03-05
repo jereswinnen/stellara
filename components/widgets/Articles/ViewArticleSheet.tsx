@@ -208,12 +208,16 @@ export function ViewArticleSheet({
         {trigger && <div onClick={(e) => e.preventDefault()}>{trigger}</div>}
 
         <SheetContent className="sm:max-w-xl w-full overflow-y-auto">
-          <SheetHeader>
+          <SheetHeader className="sticky top-0 bg-background/80 backdrop-blur-lg border-b border-border">
             <SheetTitle>Article Details</SheetTitle>
             <SheetDescription>View and edit article details</SheetDescription>
           </SheetHeader>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="px-4">
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="h-full px-4"
+          >
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="content">Content</TabsTrigger>
               <TabsTrigger value="details">Details</TabsTrigger>

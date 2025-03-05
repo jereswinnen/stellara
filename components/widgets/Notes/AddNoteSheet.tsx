@@ -109,12 +109,12 @@ export function AddNoteSheet({
 
   return (
     <Sheet open={isSheetOpen} onOpenChange={handleSheetOpenChange}>
-      <SheetContent>
-        <SheetHeader>
+      <SheetContent className="overflow-y-auto">
+        <SheetHeader className="sticky top-0 bg-background/80 backdrop-blur-lg border-b border-border">
           <SheetTitle>Add New Note</SheetTitle>
         </SheetHeader>
 
-        <div className="grid gap-4 py-4">
+        <div className="grid gap-4 px-4">
           <div className="grid gap-2">
             <Label htmlFor="title">Title</Label>
             <Input

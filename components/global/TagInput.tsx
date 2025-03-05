@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import { X, Check } from "lucide-react";
+import { X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -141,11 +141,10 @@ export function TagInput({
             {filteredSuggestions.map((tag) => (
               <li
                 key={tag}
-                className="px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground cursor-pointer flex items-center justify-between"
+                className="px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground cursor-pointer"
                 onClick={() => handleAddTag(tag)}
               >
                 <span>{tag}</span>
-                <Check className="h-4 w-4 text-muted-foreground" />
               </li>
             ))}
           </ul>

@@ -147,22 +147,19 @@ export function ViewNoteSheet({
   return (
     <>
       <Sheet open={isOpen} onOpenChange={handleSheetOpenChange}>
-        <SheetContent>
-          <SheetHeader>
+        <SheetContent className="overflow-y-auto">
+          <SheetHeader className="sticky top-0 bg-background/80 backdrop-blur-lg border-b border-border">
             <SheetTitle>View Note</SheetTitle>
           </SheetHeader>
 
-          <div className="px-4 py-4 space-y-4">
+          <div className="px-4 space-y-4">
             {/* Editor section */}
-            <div className="space-y-2">
-              <Label htmlFor="content">Content</Label>
-              <MarkdownEditor
-                value={editedNote.content}
-                onChange={handleContentChange}
-                className="min-h-[200px]"
-                disabled={isLoading}
-              />
-            </div>
+            <MarkdownEditor
+              value={editedNote.content}
+              onChange={handleContentChange}
+              className="min-h-[200px]"
+              disabled={isLoading}
+            />
 
             {/* Tags section */}
             <div className="space-y-2">

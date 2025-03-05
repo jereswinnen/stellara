@@ -233,15 +233,15 @@ export function AddBookSheet({
           </Button>
         </SheetTrigger>
       )}
-      <SheetContent>
-        <SheetHeader>
+      <SheetContent className="overflow-y-auto">
+        <SheetHeader className="sticky top-0 bg-background/80 backdrop-blur-lg border-b border-border">
           <SheetTitle>Add a new book</SheetTitle>
           <SheetDescription>
             Add a new book to your reading list.
           </SheetDescription>
         </SheetHeader>
 
-        <Tabs defaultValue="lookup" className="px-4 overflow-y-scroll">
+        <Tabs defaultValue="lookup" className="px-4">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="lookup">Lookup</TabsTrigger>
             <TabsTrigger value="manual">Manual</TabsTrigger>

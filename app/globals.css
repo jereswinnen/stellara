@@ -266,6 +266,7 @@
 
   & a:hover {
     color: color-mix(in srgb, var(--primary) 80%, black);
+    text-decoration: none;
   }
 
   & hr {

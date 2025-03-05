@@ -167,16 +167,8 @@ export function AddArticleSheet({
       open={isOpen !== undefined ? isOpen : isSheetOpen}
       onOpenChange={handleSheetOpenChange}
     >
-      {/* Only show the trigger button if isOpen is not provided externally */}
-      {isOpen === undefined && (
-        <SheetTrigger asChild>
-          <Button size="sm" className="h-8 w-8 p-0">
-            <PlusIcon className="h-4 w-4" />
-          </Button>
-        </SheetTrigger>
-      )}
-      <SheetContent>
-        <SheetHeader>
+      <SheetContent className="overflow-y-auto">
+        <SheetHeader className="sticky top-0 bg-background/80 backdrop-blur-lg border-b border-border">
           <SheetTitle>Add a new article</SheetTitle>
           <SheetDescription>
             Add a new article to your reading list.

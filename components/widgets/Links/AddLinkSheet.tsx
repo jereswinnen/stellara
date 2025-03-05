@@ -168,8 +168,8 @@ export function AddLinkSheet({
           </Button>
         </SheetTrigger>
       )}
-      <SheetContent>
-        <SheetHeader>
+      <SheetContent className="overflow-y-auto">
+        <SheetHeader className="sticky top-0 bg-background/80 backdrop-blur-lg border-b border-border">
           <SheetTitle>Add a new link</SheetTitle>
           <SheetDescription>
             Add a new link to your collection.

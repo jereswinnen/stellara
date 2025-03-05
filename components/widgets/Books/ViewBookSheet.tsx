@@ -156,8 +156,8 @@ export function ViewBookSheet({
         open={isOpen !== undefined ? isOpen : isSheetOpen}
         onOpenChange={handleSheetOpenChange}
       >
-        <SheetContent>
-          <SheetHeader>
+        <SheetContent className="overflow-y-auto">
+          <SheetHeader className="sticky top-0 bg-background/80 backdrop-blur-lg border-b border-border">
             <SheetTitle>Book Details</SheetTitle>
             <SheetDescription>View and edit book information</SheetDescription>
           </SheetHeader>
