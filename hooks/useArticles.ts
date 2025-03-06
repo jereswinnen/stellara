@@ -5,6 +5,7 @@ import { supabase, Article } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
 import { fetchUrlMetadata } from "@/lib/urlMetadata";
 import { fetchArticleContent } from "@/lib/articleContent";
+import { calculateReadingTime } from "@/lib/utils";
 
 export interface NewArticleData {
   url: string;
@@ -20,6 +21,7 @@ export interface UpdateArticleData {
   url?: string;
   title?: string;
   image?: string;
+  body?: string;
   tags?: string[];
   is_favorite?: boolean;
   is_archive?: boolean;
@@ -48,7 +50,19 @@ export function useArticles(user: User | null) {
         return;
       }
 
-      setArticles(data || []);
+      // Process articles to add length property for those with body content
+      const processedArticles = (data || []).map((article) => {
+        // If the article has body content but no length, estimate the length
+        if (article.body && !article.length) {
+          return {
+            ...article,
+            length: article.body.length,
+          };
+        }
+        return article;
+      });
+
+      setArticles(processedArticles);
     } catch (error) {
       console.error("Error fetching articles:", error);
     } finally {
@@ -74,7 +88,15 @@ export function useArticles(user: User | null) {
       // Fetch article content
       const articleContent = await fetchArticleContent(articleData.url);
 
-      const { error } = await supabase.from("articles").insert({
+      // Calculate reading time if we have content
+      let readingTimeMinutes;
+      if (articleContent?.content) {
+        const readingTime = calculateReadingTime(articleContent.content);
+        readingTimeMinutes = readingTime.minutes;
+      }
+
+      // Prepare article data for database insertion
+      const articleForDB = {
         url: articleData.url,
         title: articleData.title || "Untitled",
         image: articleData.image || null,
@@ -82,8 +104,14 @@ export function useArticles(user: User | null) {
         tags: articleData.tags || [],
         is_favorite: articleData.is_favorite || false,
         is_archive: articleData.is_archive || false,
+        reading_time_minutes: readingTimeMinutes || null,
         user_id: user.id,
-      });
+      };
+
+      const { data, error } = await supabase
+        .from("articles")
+        .insert(articleForDB)
+        .select();
 
       if (error) {
         console.error("Error adding article:", error);
@@ -109,6 +137,13 @@ export function useArticles(user: User | null) {
       if (articleData.url !== undefined) updates.url = articleData.url;
       if (articleData.title !== undefined) updates.title = articleData.title;
       if (articleData.image !== undefined) updates.image = articleData.image;
+      if (articleData.body !== undefined) {
+        updates.body = articleData.body;
+
+        // Calculate new reading time
+        const readingTime = calculateReadingTime(articleData.body);
+        updates.reading_time_minutes = readingTime.minutes;
+      }
       if (articleData.tags !== undefined) updates.tags = articleData.tags;
       if (articleData.is_favorite !== undefined)
         updates.is_favorite = articleData.is_favorite;
@@ -176,6 +211,6 @@ export function useArticles(user: User | null) {
     deleteArticle,
     recentArticles: articles
       .filter((article) => !article.is_archive)
-      .slice(0, 5), // Get the 5 most recent non-archived articles
+      .slice(0, 6), // Get the 5 most recent non-archived articles
   };
 }

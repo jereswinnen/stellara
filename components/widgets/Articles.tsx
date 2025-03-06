@@ -6,6 +6,7 @@ import {
   PlusIcon,
   SquareArrowOutUpRight,
   Loader2,
+  ClockIcon,
 } from "lucide-react";
 import { AddArticleSheet } from "@/components/global/Sheets/AddArticleSheet";
 import { ViewArticleSheet } from "@/components/global/Sheets/ViewArticleSheet";
@@ -15,7 +16,7 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Article } from "@/lib/supabase";
-import { extractDomain } from "@/lib/utils";
+import { extractDomain, formatReadingTime } from "@/lib/utils";
 import {
   TooltipContent,
   TooltipTrigger,
@@ -179,9 +180,19 @@ export function Articles() {
                         </Tooltip>
                       </TooltipProvider>
                     </div>
-                    <p className="text-xs text-muted-foreground line-clamp-1">
-                      {extractDomain(article.url)}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs text-muted-foreground line-clamp-1">
+                        {extractDomain(article.url)}
+                      </p>
+                      {article.reading_time_minutes && (
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <ClockIcon className="size-3" />
+                          <span>
+                            {formatReadingTime(article.reading_time_minutes)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                   {article.tags && article.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1">

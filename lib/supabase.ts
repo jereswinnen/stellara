@@ -66,4 +66,5 @@ export type Article = {
   created_at: string;
   updated_at: string;
   user_id: string;
+  reading_time_minutes?: number;
 };

@@ -20,10 +20,11 @@ import {
   Loader2,
   CircleCheckBig,
   SquareArrowOutUpRight,
+  ClockIcon,
 } from "lucide-react";
 import { UpdateArticleData } from "@/hooks/useArticles";
 import { Article } from "@/lib/supabase";
-import { extractDomain } from "@/lib/utils";
+import { extractDomain, formatReadingTime } from "@/lib/utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -44,6 +45,7 @@ import {
   TooltipProvider,
   Tooltip,
 } from "@/components/ui/tooltip";
+import { fetchArticleContent } from "@/lib/articleContent";
 
 interface ViewArticleSheetProps {
   article: Article;
@@ -270,9 +272,19 @@ export function ViewArticleSheet({
                         </Tooltip>
                       </TooltipProvider>
                     </div>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {extractDomain(article.url)}
-                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-xs text-muted-foreground">
+                        {extractDomain(article.url)}
+                      </p>
+                      {article.reading_time_minutes && (
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <ClockIcon className="size-3" />
+                          <span>
+                            {formatReadingTime(article.reading_time_minutes)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 

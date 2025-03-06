@@ -13,9 +13,12 @@ import {
   ArchiveIcon,
   Loader2,
   SquareArrowOutUpRight,
+  ClockIcon,
 } from "lucide-react";
 import { UpdateArticleData } from "@/hooks/useArticles";
 import { articleEvents } from "@/components/widgets/Articles";
+import { calculateReadingTime, formatReadingTime } from "@/lib/utils";
+import { fetchArticleContent } from "@/lib/articleContent";
 
 export default function ArticleDetailPage() {
   const { id } = useParams();
@@ -175,6 +178,13 @@ export default function ArticleDetailPage() {
                 <SquareArrowOutUpRight className="h-4 w-4" />
                 Visit Original
               </a>
+
+              {article && article.reading_time_minutes && (
+                <div className="flex items-center gap-1 text-sm text-muted-foreground">
+                  <ClockIcon className="h-4 w-4" />
+                  <span>{formatReadingTime(article.reading_time_minutes)}</span>
+                </div>
+              )}
             </div>
 
             {article.tags && article.tags.length > 0 && (
