@@ -181,6 +181,7 @@
 
 /* Article Content Styling */
 .article-content {
+  font-size: 1.15rem;
   /* Add proper spacing between elements */
   & p {
     margin-bottom: 1rem;

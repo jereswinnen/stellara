@@ -390,7 +390,7 @@ export function ViewArticleSheet({
               >
                 <AlertDialogTrigger asChild>
                   <Button variant="destructive" size="sm" disabled={isLoading}>
-                    <Trash2Icon className="h-4 w-4" />
+                    <Trash2Icon className="size-4" />
                     Delete
                   </Button>
                 </AlertDialogTrigger>
@@ -411,7 +411,7 @@ export function ViewArticleSheet({
                     >
                       {isLoading ? (
                         <>
-                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <Loader2 className="size-4 animate-spin" />
                           Deleting...
                         </>
                       ) : (

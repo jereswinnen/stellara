@@ -7,18 +7,40 @@ import { supabase, Article } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  BookOpenIcon,
-  ArrowLeftIcon,
-  StarIcon,
-  ArchiveIcon,
   Loader2,
   SquareArrowOutUpRight,
-  ClockIcon,
+  Ellipsis,
+  ChevronLeft,
+  Trash2,
+  ClipboardCopy,
+  ArchiveX,
+  Archive,
+  Star,
+  StarOff,
+  ArrowLeft,
+  BookOpen,
 } from "lucide-react";
 import { UpdateArticleData } from "@/hooks/useArticles";
 import { articleEvents } from "@/components/widgets/Articles";
-import { calculateReadingTime, formatReadingTime } from "@/lib/utils";
-import { fetchArticleContent } from "@/lib/articleContent";
+import { formatReadingTime } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function ArticleDetailPage() {
   const { id } = useParams();
@@ -28,6 +50,8 @@ export default function ArticleDetailPage() {
   const [loading, setLoading] = useState(true);
   const [updatingFavorite, setUpdatingFavorite] = useState(false);
   const [updatingArchive, setUpdatingArchive] = useState(false);
+  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -131,10 +155,44 @@ export default function ArticleDetailPage() {
     }
   };
 
+  const handleCopyUrl = () => {
+    if (article && article.url) {
+      navigator.clipboard.writeText(article.url);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!user || !article) return;
+
+    try {
+      setDeleting(true);
+      const { error } = await supabase
+        .from("articles")
+        .delete()
+        .eq("id", article.id)
+        .eq("user_id", user.id);
+
+      if (error) {
+        console.error("Error deleting article:", error);
+        return;
+      }
+
+      // Notify other components to refresh
+      articleEvents.emit();
+
+      // Navigate back to articles page
+      router.push("/articles");
+    } catch (error) {
+      console.error("Error deleting article:", error);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   if (authLoading || loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <Loader2 className="size-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -142,10 +200,10 @@ export default function ArticleDetailPage() {
   if (!article) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-        <BookOpenIcon className="h-16 w-16 text-muted-foreground" />
+        <BookOpen className="size-16 text-muted-foreground" />
         <h1 className="text-xl font-semibold">Article not found</h1>
         <Button onClick={() => router.push("/articles")}>
-          <ArrowLeftIcon className="h-4 w-4 mr-2" />
+          <ArrowLeft className="size-4" />
           Back to Articles
         </Button>
       </div>
@@ -153,82 +211,121 @@ export default function ArticleDetailPage() {
   }
 
   return (
-    <div className="container max-w-4xl mx-auto py-8">
-      <div className="mb-8">
-        <Button
-          variant="outline"
-          onClick={() => router.push("/articles")}
-          className="mb-4"
-        >
-          <ArrowLeftIcon className="h-4 w-4 mr-2" />
-          Back to Articles
-        </Button>
-
-        <div className="flex items-start gap-4">
-          <div className="flex-1">
-            <h1 className="text-2xl font-bold mb-2">{article.title}</h1>
-
-            <div className="flex items-center gap-2 mb-4">
-              <a
-                href={article.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1"
+    <div className="container max-w-3xl mx-auto py-8">
+      <header className="flex flex-col gap-5">
+        <div className="flex items-center justify-between">
+          <Button
+            size="icon"
+            variant="outline"
+            onClick={() => router.push("/articles")}
+          >
+            <ChevronLeft className="size-5" />
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button size="icon" variant="outline">
+                <Ellipsis className="size-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleToggleFavorite}>
+                {article?.is_favorite ? (
+                  <>
+                    <StarOff className="size-4" />
+                    Remove from Favorites
+                  </>
+                ) : (
+                  <>
+                    <Star className="size-4" />
+                    Add to Favorites
+                  </>
+                )}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleToggleArchive}>
+                {article?.is_archive ? (
+                  <>
+                    <ArchiveX className="size-4" />
+                    Unarchive
+                  </>
+                ) : (
+                  <>
+                    <Archive className="size-4" />
+                    Archive
+                  </>
+                )}
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => window.open(article?.url, "_blank")}
               >
-                <SquareArrowOutUpRight className="h-4 w-4" />
-                Visit Original
-              </a>
-
-              {article && article.reading_time_minutes && (
-                <div className="flex items-center gap-1 text-sm text-muted-foreground">
-                  <ClockIcon className="h-4 w-4" />
-                  <span>{formatReadingTime(article.reading_time_minutes)}</span>
-                </div>
-              )}
-            </div>
-
-            {article.tags && article.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1 mb-4">
-                {article.tags.map((tag) => (
-                  <Badge key={tag} variant="secondary">
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleToggleFavorite}
-              disabled={updatingFavorite || updatingArchive}
-              className={article.is_favorite ? "text-yellow-500" : ""}
-            >
-              {updatingFavorite ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <StarIcon className="h-4 w-4" />
-              )}
-            </Button>
-
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleToggleArchive}
-              disabled={updatingFavorite || updatingArchive}
-              className={article.is_archive ? "text-blue-500" : ""}
-            >
-              {updatingArchive ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <ArchiveIcon className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
+                <SquareArrowOutUpRight className="size-4" />
+                View Original
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleCopyUrl}>
+                <ClipboardCopy className="size-4" />
+                Copy Article URL
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={() => setShowDeleteAlert(true)}
+              >
+                <Trash2 className="size-4" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
-      </div>
+
+        <div className="flex flex-col items-center gap-1">
+          <h1 className="text-2xl md:text-3xl font-bold">{article.title}</h1>
+          {article && article.reading_time_minutes && (
+            <p className="text-sm text-muted-foreground">
+              {formatReadingTime(article.reading_time_minutes)}
+            </p>
+          )}
+          {/* {article.tags && article.tags.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {article.tags.map((tag) => (
+                <Badge key={tag} variant="secondary">
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          )} */}
+        </div>
+
+        <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action cannot be undone. This will permanently delete the
+                article from your account.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDelete}
+                disabled={deleting}
+                className="bg-destructive text-white hover:bg-destructive/90"
+              >
+                {deleting ? (
+                  <>
+                    <Loader2 className="size-4 animate-spin" />
+                    Deleting...
+                  </>
+                ) : (
+                  "Delete"
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </header>
 
       {article.body ? (
         <div
@@ -237,7 +334,7 @@ export default function ArticleDetailPage() {
         />
       ) : (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <BookOpenIcon className="h-12 w-12 text-muted-foreground mb-4" />
+          <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
           <p className="text-muted-foreground">
             No content available for this article
           </p>
