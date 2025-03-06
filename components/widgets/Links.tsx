@@ -1,24 +1,17 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  LinkIcon,
-  PlusIcon,
-  Loader2,
-  SquareArrowOutUpRight,
-} from "lucide-react";
+import { LinkIcon, PlusIcon, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { AddLinkSheet } from "@/components/global/Sheets/AddLinkSheet";
 import { ViewLinkSheet } from "@/components/global/Sheets/ViewLinkSheet";
-import { useLinks } from "@/hooks/useLinks";
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
-import { Link } from "@/lib/supabase";
+import { supabase, Link } from "@/lib/supabase";
 import { extractDomain } from "@/lib/utils";
-import { TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Tooltip } from "@/components/ui/tooltip";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { LinkActions } from "@/components/global/LinkActions";
 
 // Create a simple event emitter for links refresh
 export const linkEvents = {
@@ -38,11 +31,44 @@ export const linkEvents = {
 
 export function Links() {
   const { user } = useAuth();
-  const { loading, recentLinks, addLink, updateLink, deleteLink, fetchLinks } =
-    useLinks(user);
+  const router = useRouter();
+  const [links, setLinks] = useState<Link[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isAddLinkOpen, setIsAddLinkOpen] = useState(false);
   const [selectedLink, setSelectedLink] = useState<Link | null>(null);
   const [isViewLinkOpen, setIsViewLinkOpen] = useState(false);
+
+  // Fetch links from the database
+  const fetchLinks = async () => {
+    if (!user) return;
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("links")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Error fetching links:", error);
+        return;
+      }
+
+      setLinks(data || []);
+    } catch (error) {
+      console.error("Error fetching links:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch links on component mount and when user changes
+  useEffect(() => {
+    if (user) {
+      fetchLinks();
+    }
+  }, [user]);
 
   // Listen for link list refresh events
   useEffect(() => {
@@ -53,51 +79,78 @@ export function Links() {
 
     // Cleanup subscription on unmount
     return unsubscribe;
-  }, [fetchLinks]);
+  }, []);
 
   // Handle adding a link
   const handleAddLink = async (linkData: any) => {
-    const success = await addLink(linkData);
+    try {
+      const { data, error } = await supabase
+        .from("links")
+        .insert([{ ...linkData, user_id: user?.id }])
+        .select();
 
-    if (success) {
-      // Notify all components that need to refresh their link lists
-      linkEvents.emit();
+      if (error) {
+        console.error("Error adding link:", error);
+        return false;
+      }
 
-      // Close the sheet after successful add
-      setIsAddLinkOpen(false);
+      // Refresh links
+      fetchLinks();
+      return true;
+    } catch (error) {
+      console.error("Error adding link:", error);
+      return false;
     }
-
-    return success;
   };
 
   // Handle updating a link
   const handleUpdateLink = async (linkData: any) => {
-    const success = await updateLink(linkData);
+    if (!user) return false;
 
-    if (success) {
-      // Notify all components that need to refresh their link lists
-      linkEvents.emit();
+    try {
+      const { error } = await supabase
+        .from("links")
+        .update(linkData)
+        .eq("id", linkData.id)
+        .eq("user_id", user.id);
 
-      // Close the sheet after successful update
-      setIsViewLinkOpen(false);
+      if (error) {
+        console.error("Error updating link:", error);
+        return false;
+      }
+
+      // Refresh links
+      fetchLinks();
+      return true;
+    } catch (error) {
+      console.error("Error updating link:", error);
+      return false;
     }
-
-    return success;
   };
 
   // Handle deleting a link
   const handleDeleteLink = async (linkId: string) => {
-    const success = await deleteLink(linkId);
+    if (!user) return false;
 
-    if (success) {
-      // Notify all components that need to refresh their link lists
-      linkEvents.emit();
+    try {
+      const { error } = await supabase
+        .from("links")
+        .delete()
+        .eq("id", linkId)
+        .eq("user_id", user.id);
 
-      // Close the sheet after successful delete
-      setIsViewLinkOpen(false);
+      if (error) {
+        console.error("Error deleting link:", error);
+        return false;
+      }
+
+      // Refresh links
+      fetchLinks();
+      return true;
+    } catch (error) {
+      console.error("Error deleting link:", error);
+      return false;
     }
-
-    return success;
   };
 
   // Open the view link sheet
@@ -106,10 +159,15 @@ export function Links() {
     setIsViewLinkOpen(true);
   };
 
+  const openLink = (url: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    window.open(url, "_blank");
+  };
+
   return (
     <Card className="h-full">
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-xl font-bold">Recent Links</CardTitle>
+        <CardTitle className="text-xl font-bold">Links</CardTitle>
         <Button
           size="sm"
           className="size-8"
@@ -124,13 +182,13 @@ export function Links() {
             <Loader2 className="size-4 animate-spin" />
             <p className="text-sm text-muted-foreground">Loading links...</p>
           </div>
-        ) : recentLinks.length > 0 ? (
-          <div className="space-y-3">
-            {recentLinks.map((link) => (
+        ) : links.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {links.map((link) => (
               <div
                 key={link.id}
-                className="flex gap-3 border rounded-md p-3 hover:bg-accent/50 transition-colors cursor-pointer"
-                onClick={() => openViewLinkSheet(link)}
+                className="cursor-pointer flex items-center justify-between gap-2 p-3 border rounded-md hover:bg-muted/50 transition-colors"
+                onClick={(e) => openLink(link.url, e)}
               >
                 <div className="flex-shrink-0">
                   {link.image ? (
@@ -145,49 +203,40 @@ export function Links() {
                     </div>
                   )}
                 </div>
-                <div className="flex flex-1 flex-col gap-2">
-                  <div className="flex flex-col">
-                    <div className="flex justify-between">
-                      <p className="text-sm font-medium line-clamp-1">
-                        {link.title}
-                      </p>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger>
-                            <a
-                              href={link.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="flex-shrink-0"
-                            >
-                              <SquareArrowOutUpRight className="size-4 text-muted-foreground hover:text-primary" />
-                            </a>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Open link</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                    <p className="text-xs text-muted-foreground line-clamp-1">
-                      {extractDomain(link.url)}
+
+                <div className="flex flex-1 flex-col">
+                  <p className="text-sm font-medium line-clamp-1">
+                    {link.title}
+                  </p>
+                  {/* <div className="flex items-baseline justify-between gap-2">
+                    <p className="text-sm font-medium line-clamp-1">
+                      {link.title}
                     </p>
-                  </div>
-                  {link.tags && link.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                      {link.tags.map((tag) => (
-                        <Badge
-                          key={tag}
-                          variant="secondary"
-                          className="text-xs px-1.5 py-0"
-                        >
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
+                    {link.tags && link.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {link.tags.map((tag: string) => (
+                          <Badge
+                            key={tag}
+                            variant="secondary"
+                            className="text-xs px-1.5 py-0"
+                          >
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div> */}
+                  <p className="text-xs text-muted-foreground line-clamp-1">
+                    {extractDomain(link.url)}
+                  </p>
                 </div>
+
+                <LinkActions
+                  link={link}
+                  onUpdateLink={handleUpdateLink}
+                  onDeleteLink={handleDeleteLink}
+                  align="end"
+                />
               </div>
             ))}
           </div>

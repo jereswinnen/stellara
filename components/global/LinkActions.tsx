@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Article } from "@/lib/supabase";
+import { Link } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -15,15 +15,13 @@ import {
   Ellipsis,
   Star,
   StarOff,
-  Archive,
-  ArchiveX,
   SquareArrowOutUpRight,
   ClipboardCopy,
   Trash2,
   TagIcon,
+  Pencil,
 } from "lucide-react";
-import { UpdateArticleData } from "@/hooks/useArticles";
-import { ViewArticleSheet } from "@/components/global/Sheets/ViewArticleSheet";
+import { ViewLinkSheet } from "@/components/global/Sheets/ViewLinkSheet";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,43 +31,32 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-interface ArticleActionsProps {
-  article: Article;
-  onUpdateArticle: (articleData: UpdateArticleData) => Promise<boolean>;
-  onDeleteArticle: (articleId: string) => Promise<boolean>;
+interface LinkActionsProps {
+  link: Link;
+  onUpdateLink: (linkData: any) => Promise<boolean>;
+  onDeleteLink: (linkId: string) => Promise<boolean>;
   onCopyUrl?: () => void;
-  triggerVariant?: "icon" | "text";
   align?: "start" | "center" | "end";
 }
 
-export function ArticleActions({
-  article,
-  onUpdateArticle,
-  onDeleteArticle,
+export function LinkActions({
+  link,
+  onUpdateLink,
+  onDeleteLink,
   onCopyUrl,
-  triggerVariant = "icon",
   align = "end",
-}: ArticleActionsProps) {
+}: LinkActionsProps) {
   const [showEditSheet, setShowEditSheet] = useState(false);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
   const handleToggleFavorite = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    await onUpdateArticle({
-      id: article.id,
-      is_favorite: !article.is_favorite,
-    });
-  };
-
-  const handleToggleArchive = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    await onUpdateArticle({
-      id: article.id,
-      is_archive: !article.is_archive,
+    await onUpdateLink({
+      id: link.id,
+      is_favorite: !link.is_favorite,
     });
   };
 
@@ -79,7 +66,7 @@ export function ArticleActions({
       onCopyUrl();
     } else {
       // Default implementation if no custom handler is provided
-      navigator.clipboard.writeText(article.url);
+      navigator.clipboard.writeText(link.url);
     }
   };
 
@@ -95,14 +82,14 @@ export function ArticleActions({
 
   const handleOpenOriginal = (e: React.MouseEvent) => {
     e.stopPropagation();
-    window.open(article.url, "_blank");
+    window.open(link.url, "_blank");
   };
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.stopPropagation();
     setDeleting(true);
     try {
-      await onDeleteArticle(article.id);
+      await onDeleteLink(link.id);
     } finally {
       setDeleting(false);
       setShowDeleteAlert(false);
@@ -133,50 +120,37 @@ export function ArticleActions({
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleOpenEditSheet}>
-            <TagIcon className="size-4" />
-            Edit Tags
+            <Pencil className="size-4 mr-2" />
+            Edit Link
           </DropdownMenuItem>
           <DropdownMenuItem onClick={handleToggleFavorite}>
-            {article?.is_favorite ? (
+            {link?.is_favorite ? (
               <>
-                <StarOff className="size-4" />
+                <StarOff className="size-4 mr-2" />
                 Remove from Favorites
               </>
             ) : (
               <>
-                <Star className="size-4" />
+                <Star className="size-4 mr-2" />
                 Add to Favorites
-              </>
-            )}
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleToggleArchive}>
-            {article?.is_archive ? (
-              <>
-                <ArchiveX className="size-4" />
-                Unarchive
-              </>
-            ) : (
-              <>
-                <Archive className="size-4" />
-                Move to Archive
               </>
             )}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={handleOpenOriginal}>
-            <SquareArrowOutUpRight className="size-4" />
-            View Original
+            <SquareArrowOutUpRight className="size-4 mr-2" />
+            Open Link
           </DropdownMenuItem>
           <DropdownMenuItem onClick={handleCopyUrl}>
-            <ClipboardCopy className="size-4" />
-            Copy Article URL
+            <ClipboardCopy className="size-4 mr-2" />
+            Copy Link URL
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
             variant="destructive"
             onClick={handleOpenDeleteAlert}
           >
-            <Trash2 className="size-4" />
+            <Trash2 className="size-4 mr-2" />
             Delete
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -184,10 +158,10 @@ export function ArticleActions({
 
       {/* Edit Sheet */}
       <div className="hidden" onClick={(e) => e.stopPropagation()}>
-        <ViewArticleSheet
-          article={article}
-          onUpdateArticle={onUpdateArticle}
-          onDeleteArticle={onDeleteArticle}
+        <ViewLinkSheet
+          link={link}
+          onUpdateLink={onUpdateLink}
+          onDeleteLink={onDeleteLink}
           isOpen={showEditSheet}
           onOpenChange={handleSheetOpenChange}
         />
@@ -200,7 +174,7 @@ export function ArticleActions({
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete the
-              article from your account.
+              link from your account.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
