@@ -6,7 +6,6 @@ import {
   PlusIcon,
   SquareArrowOutUpRight,
   Loader2,
-  ClockIcon,
 } from "lucide-react";
 import { AddArticleSheet } from "@/components/global/Sheets/AddArticleSheet";
 import { ViewArticleSheet } from "@/components/global/Sheets/ViewArticleSheet";
@@ -142,25 +141,32 @@ export function Articles() {
                 className="flex gap-3 border rounded-md p-3 hover:bg-accent/50 transition-colors cursor-pointer"
                 onClick={() => openViewArticleSheet(article)}
               >
-                <div className="flex-shrink-0">
-                  {article.image ? (
-                    <img
-                      src={article.image}
-                      alt={article.title}
-                      className="size-10 object-cover rounded"
-                    />
-                  ) : (
-                    <div className="size-10 bg-muted flex items-center justify-center rounded">
-                      <BookOpenIcon className="size-5 text-muted-foreground" />
-                    </div>
-                  )}
-                </div>
-                <div className="flex flex-1 flex-col gap-2">
-                  <div className="flex flex-col">
-                    <div className="flex justify-between">
-                      <p className="text-sm font-medium line-clamp-1">
-                        {article.title}
-                      </p>
+                {article.image && (
+                  <img
+                    src={article.image}
+                    alt={article.title}
+                    className="flex-shrink-0 size-10 object-cover rounded"
+                  />
+                )}
+                <div className="flex flex-1 flex-col">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <p className="text-sm font-medium line-clamp-1">
+                      {article.title}
+                    </p>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {article.tags && article.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {article.tags.map((tag) => (
+                            <Badge
+                              key={tag}
+                              variant="secondary"
+                              className="text-xs px-1.5 py-0"
+                            >
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger>
@@ -175,38 +181,21 @@ export function Articles() {
                             </a>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Open article</p>
+                            <p>View on {extractDomain(article.url)}</p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <p className="text-xs text-muted-foreground line-clamp-1">
-                        {extractDomain(article.url)}
-                      </p>
-                      {article.reading_time_minutes && (
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <ClockIcon className="size-3" />
-                          <span>
-                            {formatReadingTime(article.reading_time_minutes)}
-                          </span>
-                        </div>
-                      )}
-                    </div>
                   </div>
-                  {article.tags && article.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1">
-                      {article.tags.map((tag) => (
-                        <Badge
-                          key={tag}
-                          variant="secondary"
-                          className="text-xs px-1.5 py-0"
-                        >
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                  )}
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground line-clamp-1">
+                    <p>{extractDomain(article.url)}</p>
+                    {article.reading_time_minutes && (
+                      <>
+                        <span className="text-muted-foreground">&bull;</span>
+                        <p>{formatReadingTime(article.reading_time_minutes)}</p>
+                      </>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}

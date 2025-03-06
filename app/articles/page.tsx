@@ -10,7 +10,7 @@ import { articleEvents } from "@/components/widgets/Articles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { extractDomain } from "@/lib/utils";
+import { extractDomain, formatReadingTime } from "@/lib/utils";
 import {
   BookOpenIcon,
   PlusIcon,
@@ -20,6 +20,7 @@ import {
   ArchiveIcon,
   SearchIcon,
   FilterIcon,
+  ClockIcon,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -27,6 +28,12 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  TooltipContent,
+  TooltipTrigger,
+  Tooltip,
+  TooltipProvider,
+} from "@/components/ui/tooltip";
 
 export default function ArticlesPage() {
   const { user, loading: authLoading } = useAuth();
@@ -164,31 +171,20 @@ export default function ArticlesPage() {
           {filteredArticles.map((article) => (
             <div
               key={article.id}
-              className="flex gap-4 border rounded-lg p-4 hover:bg-accent/50 transition-colors cursor-pointer"
+              className="flex gap-3 border rounded-md p-3 hover:bg-accent/50 transition-colors cursor-pointer"
               onClick={() => navigateToArticle(article.id)}
             >
-              <div className="flex-shrink-0">
-                {article.image ? (
-                  <img
-                    src={article.image}
-                    alt={article.title}
-                    className="h-16 w-16 object-cover rounded"
-                  />
-                ) : (
-                  <div className="h-16 w-16 bg-muted flex items-center justify-center rounded">
-                    <BookOpenIcon className="h-8 w-8 text-muted-foreground" />
-                  </div>
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <h3 className="font-medium line-clamp-1">
-                      {article.title}
-                    </h3>
-                    <p className="text-sm text-muted-foreground line-clamp-1 mb-2">
-                      {extractDomain(article.url)}
-                    </p>
+              {article.image && (
+                <img
+                  src={article.image}
+                  alt={article.title}
+                  className="flex-shrink-0 size-10 object-cover rounded"
+                />
+              )}
+              <div className="flex flex-1 flex-col">
+                <div className="flex items-baseline justify-between gap-2">
+                  <h3 className="font-medium line-clamp-1">{article.title}</h3>
+                  <div className="flex items-center gap-2 flex-shrink-0">
                     {article.tags && article.tags.length > 0 && (
                       <div className="flex flex-wrap gap-1">
                         {article.tags.map((tag) => (
@@ -202,40 +198,56 @@ export default function ArticlesPage() {
                         ))}
                       </div>
                     )}
-                  </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
                     {article.is_favorite && (
-                      <StarIcon className="h-4 w-4 text-yellow-500" />
+                      <StarIcon className="size-4 text-yellow-500" />
                     )}
                     {article.is_archive && (
-                      <ArchiveIcon className="h-4 w-4 text-blue-500" />
+                      <ArchiveIcon className="size-4 text-blue-500" />
                     )}
-                    <a
-                      href={article.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="text-muted-foreground hover:text-primary"
-                    >
-                      <SquareArrowOutUpRight className="h-4 w-4" />
-                    </a>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger>
+                          <a
+                            href={article.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={(e) => e.stopPropagation()}
+                            className="flex-shrink-0"
+                          >
+                            <SquareArrowOutUpRight className="size-4 text-muted-foreground hover:text-primary" />
+                          </a>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>View on {extractDomain(article.url)}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
+                </div>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground line-clamp-1">
+                  <p>{extractDomain(article.url)}</p>
+                  {article.reading_time_minutes && (
+                    <>
+                      <span className="text-muted-foreground">&bull;</span>
+                      <p>{formatReadingTime(article.reading_time_minutes)}</p>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <div className="flex flex-col items-center justify-center py-16 text-center">
-          <BookOpenIcon className="h-16 w-16 text-muted-foreground mb-4" />
-          <h2 className="text-xl font-semibold mb-2">No articles found</h2>
-          <p className="text-muted-foreground mb-6">
+        <div className="flex flex-col gap-2 items-center justify-center py-16 text-center">
+          <BookOpenIcon className="size-16 text-muted-foreground" />
+          <h2 className="text-xl font-bold">No articles found</h2>
+          <p className="text-muted-foreground">
             {searchQuery || showFavorites
               ? "Try adjusting your search or filters"
               : "Start by adding your first article"}
           </p>
           <Button onClick={() => setIsAddArticleOpen(true)}>
-            <PlusIcon className="h-4 w-4 mr-2" />
+            <PlusIcon className="size-4" />
             Add Article
           </Button>
         </div>
