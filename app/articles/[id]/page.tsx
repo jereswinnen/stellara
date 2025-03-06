@@ -19,6 +19,8 @@ import {
   StarOff,
   ArrowLeft,
   BookOpen,
+  Glasses,
+  Clock,
 } from "lucide-react";
 import { UpdateArticleData } from "@/hooks/useArticles";
 import { articleEvents } from "@/components/widgets/Articles";
@@ -211,8 +213,8 @@ export default function ArticleDetailPage() {
   }
 
   return (
-    <div className="container max-w-3xl mx-auto py-8">
-      <header className="flex flex-col gap-5">
+    <div className="container max-w-3xl mx-auto py-8 flex flex-col gap-5">
+      <header className="flex flex-col gap-8">
         <div className="flex items-center justify-between">
           <Button
             size="icon"
@@ -280,11 +282,14 @@ export default function ArticleDetailPage() {
         </div>
 
         <div className="flex flex-col items-center gap-1">
-          <h1 className="text-2xl md:text-3xl font-bold">{article.title}</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-center">
+            {article.title}
+          </h1>
           {article && article.reading_time_minutes && (
-            <p className="text-sm text-muted-foreground">
-              {formatReadingTime(article.reading_time_minutes)}
-            </p>
+            <div className="flex items-center gap-1 text-sm text-muted-foreground">
+              <Clock className="size-3" />
+              <p>{formatReadingTime(article.reading_time_minutes)}</p>
+            </div>
           )}
           {/* {article.tags && article.tags.length > 0 && (
             <div className="flex flex-wrap gap-1">
