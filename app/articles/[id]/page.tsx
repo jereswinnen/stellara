@@ -21,6 +21,7 @@ import {
   BookOpen,
   Glasses,
   Clock,
+  TagIcon,
 } from "lucide-react";
 import { UpdateArticleData } from "@/hooks/useArticles";
 import { articleEvents } from "@/components/widgets/Articles";
@@ -43,6 +44,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { ViewArticleSheet } from "@/components/global/Sheets/ViewArticleSheet";
+import { ArticleActions } from "@/components/global/ArticleActions";
 
 export default function ArticleDetailPage() {
   const { id } = useParams();
@@ -54,6 +57,7 @@ export default function ArticleDetailPage() {
   const [updatingArchive, setUpdatingArchive] = useState(false);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showEditSheet, setShowEditSheet] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -158,13 +162,12 @@ export default function ArticleDetailPage() {
   };
 
   const handleCopyUrl = () => {
-    if (article && article.url) {
-      navigator.clipboard.writeText(article.url);
-    }
+    navigator.clipboard.writeText(window.location.href);
+    // You could add a toast notification here
   };
 
   const handleDelete = async () => {
-    if (!user || !article) return;
+    if (!user || !article) return false;
 
     try {
       setDeleting(true);
@@ -176,7 +179,7 @@ export default function ArticleDetailPage() {
 
       if (error) {
         console.error("Error deleting article:", error);
-        return;
+        return false;
       }
 
       // Notify other components to refresh
@@ -184,8 +187,10 @@ export default function ArticleDetailPage() {
 
       // Navigate back to articles page
       router.push("/articles");
+      return true;
     } catch (error) {
       console.error("Error deleting article:", error);
+      return false;
     } finally {
       setDeleting(false);
     }
@@ -223,67 +228,20 @@ export default function ArticleDetailPage() {
           >
             <ChevronLeft className="size-5" />
           </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size="icon" variant="outline">
-                <Ellipsis className="size-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleToggleFavorite}>
-                {article?.is_favorite ? (
-                  <>
-                    <StarOff className="size-4" />
-                    Remove from Favorites
-                  </>
-                ) : (
-                  <>
-                    <Star className="size-4" />
-                    Add to Favorites
-                  </>
-                )}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleToggleArchive}>
-                {article?.is_archive ? (
-                  <>
-                    <ArchiveX className="size-4" />
-                    Unarchive
-                  </>
-                ) : (
-                  <>
-                    <Archive className="size-4" />
-                    Archive
-                  </>
-                )}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => window.open(article?.url, "_blank")}
-              >
-                <SquareArrowOutUpRight className="size-4" />
-                View Original
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleCopyUrl}>
-                <ClipboardCopy className="size-4" />
-                Copy Article URL
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                variant="destructive"
-                onClick={() => setShowDeleteAlert(true)}
-              >
-                <Trash2 className="size-4" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+
+          {article && (
+            <ArticleActions
+              article={article}
+              onUpdateArticle={updateArticle}
+              onDeleteArticle={handleDelete}
+              onCopyUrl={handleCopyUrl}
+            />
+          )}
         </div>
 
         <div className="flex flex-col items-center gap-1">
           <h1 className="text-2xl md:text-3xl font-bold text-center">
-            {article.title}
+            {article?.title}
           </h1>
           {article && article.reading_time_minutes && (
             <div className="flex items-center gap-1 text-sm text-muted-foreground">
@@ -330,6 +288,16 @@ export default function ArticleDetailPage() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+
+        {article && (
+          <ViewArticleSheet
+            article={article}
+            onUpdateArticle={updateArticle}
+            onDeleteArticle={handleDelete}
+            isOpen={showEditSheet}
+            onOpenChange={setShowEditSheet}
+          />
+        )}
       </header>
 
       {article.body ? (

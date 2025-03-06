@@ -13,18 +13,14 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import {
-  BookOpenIcon,
   StarIcon,
   ArchiveIcon,
   Trash2Icon,
   Loader2,
   CircleCheckBig,
-  SquareArrowOutUpRight,
-  ClockIcon,
 } from "lucide-react";
 import { UpdateArticleData } from "@/hooks/useArticles";
 import { Article } from "@/lib/supabase";
-import { extractDomain, formatReadingTime } from "@/lib/utils";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,16 +32,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TagInput } from "@/components/global/TagInput";
 import { useTags } from "@/components/providers/TagsProvider";
-import {
-  TooltipContent,
-  TooltipTrigger,
-  TooltipProvider,
-  Tooltip,
-} from "@/components/ui/tooltip";
-import { fetchArticleContent } from "@/lib/articleContent";
 
 interface ViewArticleSheetProps {
   article: Article;
@@ -75,10 +63,9 @@ export function ViewArticleSheet({
     is_archive: article.is_archive,
   });
   const [hasChanges, setHasChanges] = useState(false);
-  const [activeTab, setActiveTab] = useState("content");
 
   // Create a user object from the article's user_id
-  const userObj = article?.user_id ? { id: article.user_id } : null;
+  // const userObj = article?.user_id ? { id: article.user_id } : null;
 
   // Get all existing tags from the Tags context
   const { allTags, addTag } = useTags();
@@ -118,7 +105,6 @@ export function ViewArticleSheet({
 
     if (!open) {
       // Reset state when closing
-      setActiveTab("content");
       setIsDeleteDialogOpen(false);
 
       // Reset form when closing
@@ -217,150 +203,57 @@ export function ViewArticleSheet({
             <SheetDescription>View and edit article details</SheetDescription>
           </SheetHeader>
 
-          <Tabs
-            value={activeTab}
-            onValueChange={setActiveTab}
-            className="h-full px-4"
-          >
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="content">Content</TabsTrigger>
-              <TabsTrigger value="details">Details</TabsTrigger>
-            </TabsList>
+          <div className="space-y-4 px-4">
+            {/* Edit title */}
+            <div className="space-y-2">
+              <Label htmlFor="title">Title</Label>
+              <Input
+                id="title"
+                value={editedArticle.title}
+                onChange={(e) =>
+                  setEditedArticle({
+                    ...editedArticle,
+                    title: e.target.value,
+                  })
+                }
+                disabled={isLoading}
+              />
+            </div>
 
-            <TabsContent value="content" className="mt-4">
-              <div className="space-y-4">
-                {/* Article preview */}
-                <div className="flex items-start space-x-3 border rounded-lg p-3">
-                  <div className="flex-shrink-0 mt-1">
-                    {article.image ? (
-                      <img
-                        src={article.image}
-                        alt={article.title}
-                        className="h-12 w-12 object-cover rounded"
-                      />
-                    ) : (
-                      <div className="h-12 w-12 bg-muted flex items-center justify-center rounded">
-                        <BookOpenIcon className="h-6 w-6 text-muted-foreground" />
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-baseline justify-between">
-                      <p
-                        className="text-sm font-medium line-clamp-2"
-                        tabIndex={0}
-                      >
-                        {article.title}
-                      </p>
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger>
-                            <a
-                              href={article.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex-shrink-0"
-                              tabIndex={-1}
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <SquareArrowOutUpRight className="size-4 text-muted-foreground hover:text-primary" />
-                            </a>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Open article</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <p className="text-xs text-muted-foreground">
-                        {extractDomain(article.url)}
-                      </p>
-                      {article.reading_time_minutes && (
-                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-                          <ClockIcon className="size-3" />
-                          <span>
-                            {formatReadingTime(article.reading_time_minutes)}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
+            {/* Tags section */}
+            <div className="space-y-2">
+              <Label htmlFor="tags">Tags</Label>
+              <TagInput
+                tags={editedArticle.tags || []}
+                onAddTag={handleAddTag}
+                onRemoveTag={handleRemoveTag}
+                existingTags={allTags}
+                disabled={isLoading}
+                placeholder="Add a tag (type to see suggestions)"
+              />
+            </div>
 
-                {/* Article content */}
-                <div className="p-4 border rounded-lg max-h-[60vh] overflow-y-auto">
-                  {article.body ? (
-                    <div
-                      className="article-content"
-                      dangerouslySetInnerHTML={{ __html: article.body }}
-                    />
-                  ) : (
-                    <div className="flex flex-col gap-2 items-center justify-center py-6 text-center">
-                      <BookOpenIcon className="size-8 text-muted-foreground" />
-                      <p className="text-muted-foreground">
-                        No content available
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="details" className="mt-4">
-              <div className="space-y-4">
-                {/* Edit title */}
-                <div className="space-y-2">
-                  <Label htmlFor="title">Title</Label>
-                  <Input
-                    id="title"
-                    value={editedArticle.title}
-                    onChange={(e) =>
-                      setEditedArticle({
-                        ...editedArticle,
-                        title: e.target.value,
-                      })
-                    }
-                    disabled={isLoading}
-                  />
-                </div>
-
-                {/* Tags section */}
-                <div className="space-y-2">
-                  <Label htmlFor="tags">Tags</Label>
-                  <TagInput
-                    tags={editedArticle.tags || []}
-                    onAddTag={handleAddTag}
-                    onRemoveTag={handleRemoveTag}
-                    existingTags={allTags}
-                    disabled={isLoading}
-                    placeholder="Add a tag (type to see suggestions)"
-                  />
-                </div>
-
-                {/* Save changes button */}
-                {hasChanges && (
-                  <Button
-                    onClick={handleUpdateArticle}
-                    disabled={isLoading}
-                    className="w-full"
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      <>
-                        <CircleCheckBig className="h-4 w-4" />
-                        Save Changes
-                      </>
-                    )}
-                  </Button>
+            {/* Save changes button */}
+            {hasChanges && (
+              <Button
+                onClick={handleUpdateArticle}
+                disabled={isLoading}
+                className="w-full"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <CircleCheckBig className="h-4 w-4" />
+                    Save Changes
+                  </>
                 )}
-              </div>
-            </TabsContent>
-          </Tabs>
+              </Button>
+            )}
+          </div>
 
           <SheetFooter className="flex flex-col space-y-2 sm:space-y-0">
             <div className="flex justify-between w-full">

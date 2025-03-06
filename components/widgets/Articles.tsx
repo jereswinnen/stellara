@@ -1,14 +1,8 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  BookOpenIcon,
-  PlusIcon,
-  SquareArrowOutUpRight,
-  Loader2,
-} from "lucide-react";
+import { BookOpenIcon, PlusIcon, Loader2 } from "lucide-react";
 import { AddArticleSheet } from "@/components/global/Sheets/AddArticleSheet";
-import { ViewArticleSheet } from "@/components/global/Sheets/ViewArticleSheet";
 import { useArticles } from "@/hooks/useArticles";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/providers/AuthProvider";
@@ -16,12 +10,9 @@ import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Article } from "@/lib/supabase";
 import { extractDomain, formatReadingTime } from "@/lib/utils";
-import {
-  TooltipContent,
-  TooltipTrigger,
-  TooltipProvider,
-  Tooltip,
-} from "@/components/ui/tooltip";
+import { useRouter } from "next/navigation";
+import { ArticleActions } from "@/components/global/ArticleActions";
+import { supabase } from "@/lib/supabase";
 
 // Create a simple event emitter for articles refresh
 export const articleEvents = {
@@ -41,17 +32,10 @@ export const articleEvents = {
 
 export function Articles() {
   const { user } = useAuth();
-  const {
-    loading,
-    recentArticles,
-    addArticle,
-    updateArticle,
-    deleteArticle,
-    fetchArticles,
-  } = useArticles(user);
+  const router = useRouter();
+  const { loading, recentArticles, addArticle, fetchArticles } =
+    useArticles(user);
   const [isAddArticleOpen, setIsAddArticleOpen] = useState(false);
-  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
-  const [isViewArticleOpen, setIsViewArticleOpen] = useState(false);
 
   // Listen for article list refresh events
   useEffect(() => {
@@ -64,55 +48,78 @@ export function Articles() {
     return unsubscribe;
   }, [fetchArticles]);
 
-  // Handle adding an article
   const handleAddArticle = async (articleData: any) => {
-    const success = await addArticle(articleData);
+    try {
+      const { data, error } = await supabase
+        .from("articles")
+        .insert([{ ...articleData, user_id: user?.id }])
+        .select();
 
-    if (success) {
-      // Notify all components that need to refresh their article lists
-      articleEvents.emit();
+      if (error) {
+        console.error("Error adding article:", error);
+        return false;
+      }
 
-      // Close the sheet after successful add
-      setIsAddArticleOpen(false);
+      // Refresh articles
+      fetchArticles();
+      return true;
+    } catch (error) {
+      console.error("Error adding article:", error);
+      return false;
     }
-
-    return success;
   };
 
-  // Handle updating an article
-  const handleUpdateArticle = async (articleData: any) => {
-    const success = await updateArticle(articleData);
+  const updateArticle = async (articleData: any) => {
+    if (!user) return false;
 
-    if (success) {
-      // Notify all components that need to refresh their article lists
-      articleEvents.emit();
+    try {
+      const { error } = await supabase
+        .from("articles")
+        .update(articleData)
+        .eq("id", articleData.id)
+        .eq("user_id", user.id);
 
-      // Close the sheet after successful update
-      setIsViewArticleOpen(false);
+      if (error) {
+        console.error("Error updating article:", error);
+        return false;
+      }
+
+      // Refresh articles
+      fetchArticles();
+      return true;
+    } catch (error) {
+      console.error("Error updating article:", error);
+      return false;
     }
-
-    return success;
   };
 
-  // Handle deleting an article
-  const handleDeleteArticle = async (articleId: string) => {
-    const success = await deleteArticle(articleId);
+  const deleteArticle = async (articleId: string) => {
+    if (!user) return false;
 
-    if (success) {
-      // Notify all components that need to refresh their article lists
-      articleEvents.emit();
+    try {
+      const { error } = await supabase
+        .from("articles")
+        .delete()
+        .eq("id", articleId)
+        .eq("user_id", user.id);
 
-      // Close the sheet after successful delete
-      setIsViewArticleOpen(false);
+      if (error) {
+        console.error("Error deleting article:", error);
+        return false;
+      }
+
+      // Refresh articles
+      fetchArticles();
+      return true;
+    } catch (error) {
+      console.error("Error deleting article:", error);
+      return false;
     }
-
-    return success;
   };
 
-  // Open the view article sheet
-  const openViewArticleSheet = (article: Article) => {
-    setSelectedArticle(article);
-    setIsViewArticleOpen(true);
+  // Navigate to article detail page
+  const navigateToArticlePage = (article: Article) => {
+    router.push(`/articles/${article.id}`);
   };
 
   return (
@@ -135,11 +142,11 @@ export function Articles() {
           </div>
         ) : recentArticles.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {recentArticles.map((article) => (
+            {recentArticles.slice(0, 6).map((article) => (
               <div
                 key={article.id}
                 className="flex gap-3 border rounded-md p-3 hover:bg-accent/50 transition-colors cursor-pointer"
-                onClick={() => openViewArticleSheet(article)}
+                onClick={() => navigateToArticlePage(article)}
               >
                 {article.image && (
                   <img
@@ -153,39 +160,19 @@ export function Articles() {
                     <p className="text-sm font-medium line-clamp-1">
                       {article.title}
                     </p>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      {article.tags && article.tags.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
-                          {article.tags.map((tag) => (
-                            <Badge
-                              key={tag}
-                              variant="secondary"
-                              className="text-xs px-1.5 py-0"
-                            >
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger>
-                            <a
-                              href={article.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              onClick={(e) => e.stopPropagation()}
-                              className="flex-shrink-0"
-                            >
-                              <SquareArrowOutUpRight className="size-4 text-muted-foreground hover:text-primary" />
-                            </a>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>View on {extractDomain(article.url)}</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
+                    {article.tags && article.tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1">
+                        {article.tags.map((tag) => (
+                          <Badge
+                            key={tag}
+                            variant="secondary"
+                            className="text-xs px-1.5 py-0"
+                          >
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div className="flex items-center gap-1 text-xs text-muted-foreground line-clamp-1">
                     <p>{extractDomain(article.url)}</p>
@@ -197,12 +184,20 @@ export function Articles() {
                     )}
                   </div>
                 </div>
+
+                <ArticleActions
+                  article={article}
+                  onUpdateArticle={updateArticle}
+                  onDeleteArticle={deleteArticle}
+                  triggerVariant="icon"
+                  align="end"
+                />
               </div>
             ))}
           </div>
         ) : (
           <div className="flex flex-col gap-2 items-center justify-center h-40 text-center">
-            <BookOpenIcon className="size-8 text-muted-foreground mb-2" />
+            <BookOpenIcon className="size-8 text-muted-foreground" />
             <p className="text-muted-foreground">No articles saved yet</p>
             <Button
               variant="outline"
@@ -220,16 +215,6 @@ export function Articles() {
           isOpen={isAddArticleOpen}
           onOpenChange={setIsAddArticleOpen}
         />
-
-        {selectedArticle && (
-          <ViewArticleSheet
-            article={selectedArticle}
-            onUpdateArticle={handleUpdateArticle}
-            onDeleteArticle={handleDeleteArticle}
-            isOpen={isViewArticleOpen}
-            onOpenChange={setIsViewArticleOpen}
-          />
-        )}
       </CardContent>
     </Card>
   );

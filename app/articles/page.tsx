@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useArticles } from "@/hooks/useArticles";
-import { Article } from "@/lib/supabase";
+import { supabase, Article } from "@/lib/supabase";
 import { AddArticleSheet } from "@/components/global/Sheets/AddArticleSheet";
 import { articleEvents } from "@/components/widgets/Articles";
 import { Button } from "@/components/ui/button";
@@ -14,13 +14,11 @@ import { extractDomain, formatReadingTime } from "@/lib/utils";
 import {
   BookOpenIcon,
   PlusIcon,
-  SquareArrowOutUpRight,
   Loader2,
   StarIcon,
   ArchiveIcon,
   SearchIcon,
   FilterIcon,
-  ClockIcon,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -28,12 +26,8 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  TooltipContent,
-  TooltipTrigger,
-  Tooltip,
-  TooltipProvider,
-} from "@/components/ui/tooltip";
+import { UpdateArticleData } from "@/hooks/useArticles";
+import { ArticleActions } from "@/components/global/ArticleActions";
 
 export default function ArticlesPage() {
   const { user, loading: authLoading } = useAuth();
@@ -99,14 +93,72 @@ export default function ArticlesPage() {
 
   // Handle adding an article
   const handleAddArticle = async (articleData: any) => {
-    const success = await addArticle(articleData);
+    try {
+      const { data, error } = await supabase
+        .from("articles")
+        .insert([{ ...articleData, user_id: user?.id }])
+        .select();
 
-    if (success) {
-      articleEvents.emit();
-      setIsAddArticleOpen(false);
+      if (error) {
+        console.error("Error adding article:", error);
+        return false;
+      }
+
+      // Refresh articles
+      fetchArticles();
+      return true;
+    } catch (error) {
+      console.error("Error adding article:", error);
+      return false;
     }
+  };
 
-    return success;
+  const updateArticle = async (articleData: UpdateArticleData) => {
+    if (!user) return false;
+
+    try {
+      const { error } = await supabase
+        .from("articles")
+        .update(articleData)
+        .eq("id", articleData.id)
+        .eq("user_id", user.id);
+
+      if (error) {
+        console.error("Error updating article:", error);
+        return false;
+      }
+
+      // Refresh articles
+      fetchArticles();
+      return true;
+    } catch (error) {
+      console.error("Error updating article:", error);
+      return false;
+    }
+  };
+
+  const deleteArticle = async (articleId: string) => {
+    if (!user) return false;
+
+    try {
+      const { error } = await supabase
+        .from("articles")
+        .delete()
+        .eq("id", articleId)
+        .eq("user_id", user.id);
+
+      if (error) {
+        console.error("Error deleting article:", error);
+        return false;
+      }
+
+      // Refresh articles
+      fetchArticles();
+      return true;
+    } catch (error) {
+      console.error("Error deleting article:", error);
+      return false;
+    }
   };
 
   // Navigate to article detail page
@@ -124,134 +176,137 @@ export default function ArticlesPage() {
 
   return (
     <div className="container mx-auto py-8">
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
-        <h1 className="text-3xl font-bold">Articles</h1>
-        <Button onClick={() => setIsAddArticleOpen(true)}>
-          <PlusIcon className="size-4" />
-          Add Article
-        </Button>
-      </div>
-
-      <div className="flex flex-col md:flex-row gap-4 mb-6">
-        <div className="relative flex-1">
-          <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search articles..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="gap-2">
-              <FilterIcon className="h-4 w-4" />
-              Filters
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuCheckboxItem
-              checked={showFavorites}
-              onCheckedChange={setShowFavorites}
-            >
-              Favorites Only
-            </DropdownMenuCheckboxItem>
-            <DropdownMenuCheckboxItem
-              checked={showArchived}
-              onCheckedChange={setShowArchived}
-            >
-              Show Archived
-            </DropdownMenuCheckboxItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
-      {filteredArticles.length > 0 ? (
-        <div className="space-y-4">
-          {filteredArticles.map((article) => (
-            <div
-              key={article.id}
-              className="flex gap-3 border rounded-md p-3 hover:bg-accent/50 transition-colors cursor-pointer"
-              onClick={() => navigateToArticle(article.id)}
-            >
-              {article.image && (
-                <img
-                  src={article.image}
-                  alt={article.title}
-                  className="flex-shrink-0 size-10 object-cover rounded"
-                />
-              )}
-              <div className="flex flex-1 flex-col">
-                <div className="flex items-baseline justify-between gap-2">
-                  <h3 className="font-medium line-clamp-1">{article.title}</h3>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    {article.tags && article.tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
-                        {article.tags.map((tag) => (
-                          <Badge
-                            key={tag}
-                            variant="secondary"
-                            className="text-xs px-1.5 py-0"
-                          >
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                    {article.is_favorite && (
-                      <StarIcon className="size-4 text-yellow-500" />
-                    )}
-                    {article.is_archive && (
-                      <ArchiveIcon className="size-4 text-blue-500" />
-                    )}
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger>
-                          <a
-                            href={article.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onClick={(e) => e.stopPropagation()}
-                            className="flex-shrink-0"
-                          >
-                            <SquareArrowOutUpRight className="size-4 text-muted-foreground hover:text-primary" />
-                          </a>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>View on {extractDomain(article.url)}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1 text-xs text-muted-foreground line-clamp-1">
-                  <p>{extractDomain(article.url)}</p>
-                  {article.reading_time_minutes && (
-                    <>
-                      <span className="text-muted-foreground">&bull;</span>
-                      <p>{formatReadingTime(article.reading_time_minutes)}</p>
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="flex flex-col gap-2 items-center justify-center py-16 text-center">
-          <BookOpenIcon className="size-16 text-muted-foreground" />
-          <h2 className="text-xl font-bold">No articles found</h2>
-          <p className="text-muted-foreground">
-            {searchQuery || showFavorites
-              ? "Try adjusting your search or filters"
-              : "Start by adding your first article"}
-          </p>
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-8 gap-4">
+          <h1 className="text-3xl font-bold">Articles</h1>
           <Button onClick={() => setIsAddArticleOpen(true)}>
             <PlusIcon className="size-4" />
             Add Article
           </Button>
         </div>
-      )}
+
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="relative flex-1">
+            <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search articles..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <FilterIcon className="h-4 w-4" />
+                Filters
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuCheckboxItem
+                checked={showFavorites}
+                onCheckedChange={setShowFavorites}
+              >
+                Favorites Only
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={showArchived}
+                onCheckedChange={setShowArchived}
+              >
+                Show Archived
+              </DropdownMenuCheckboxItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {loading ? (
+          <div className="flex justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        ) : filteredArticles.length > 0 ? (
+          <div className="flex flex-col gap-4">
+            {filteredArticles.map((article) => (
+              <div
+                key={article.id}
+                className="flex gap-3 border rounded-md p-3 hover:bg-accent/50 transition-colors cursor-pointer"
+                onClick={() => navigateToArticle(article.id)}
+              >
+                {article.image && (
+                  <img
+                    src={article.image}
+                    alt={article.title}
+                    className="flex-shrink-0 size-10 object-cover rounded"
+                  />
+                )}
+                <div className="flex flex-1 flex-col">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <h3 className="font-medium line-clamp-1">
+                      {article.title}
+                    </h3>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {article.tags && article.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {article.tags.map((tag) => (
+                            <Badge
+                              key={tag}
+                              variant="secondary"
+                              className="text-xs px-1.5 py-0"
+                            >
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                      {article.is_favorite && (
+                        <StarIcon className="size-4 text-yellow-500" />
+                      )}
+                      {article.is_archive && (
+                        <ArchiveIcon className="size-4 text-blue-500" />
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground line-clamp-1">
+                    <p>{extractDomain(article.url)}</p>
+                    {article.reading_time_minutes && (
+                      <>
+                        <span className="text-muted-foreground">&bull;</span>
+                        <p>{formatReadingTime(article.reading_time_minutes)}</p>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <ArticleActions
+                  article={article}
+                  onUpdateArticle={updateArticle}
+                  onDeleteArticle={deleteArticle}
+                  triggerVariant="icon"
+                  align="end"
+                />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2 items-center justify-center h-40 text-center">
+            <BookOpenIcon className="size-8 text-muted-foreground mb-2" />
+            <p className="text-muted-foreground">
+              {searchQuery
+                ? "No articles match your search"
+                : "No articles saved yet"}
+            </p>
+            {!searchQuery && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsAddArticleOpen(true)}
+              >
+                <PlusIcon className="size-4 mr-2" />
+                Add your first article
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
 
       <AddArticleSheet
         onAddArticle={handleAddArticle}
