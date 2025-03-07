@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import {
   Menubar,
   MenubarContent,
@@ -19,6 +20,17 @@ export function Navigation() {
     openAddArticleSheet,
     openAddNoteSheet,
   } = useCommandMenu();
+
+  const pathname = usePathname();
+
+  // Don't show navigation on auth page or article detail pages
+  const shouldHideNavigation =
+    pathname === "/auth" ||
+    (pathname.startsWith("/articles/") && pathname !== "/articles");
+
+  if (shouldHideNavigation) {
+    return null;
+  }
 
   return (
     <Menubar className="sticky top-0 z-50 mx-auto bg-background/80 backdrop-blur-lg">
