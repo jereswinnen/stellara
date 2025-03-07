@@ -418,7 +418,7 @@ export function AddBookSheet({
                   onChange={(e) =>
                     setNewBook({ ...newBook, book_title: e.target.value })
                   }
-                  placeholder="Enter book title"
+                  placeholder="Enter title"
                 />
               </div>
               <div className="grid gap-2">

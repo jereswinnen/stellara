@@ -178,7 +178,7 @@ export function ViewBookSheet({
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="book-title">Book Title</Label>
+              <Label htmlFor="book-title">Title</Label>
               <Input
                 id="book-title"
                 value={editedBook.book_title}
@@ -202,7 +202,7 @@ export function ViewBookSheet({
             </div>
 
             <div className="grid gap-2">
-              <Label htmlFor="cover-url">Book Cover URL</Label>
+              <Label htmlFor="cover-url">Cover URL</Label>
               <Input
                 id="cover-url"
                 value={editedBook.book_cover_url}
