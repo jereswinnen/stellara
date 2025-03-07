@@ -33,14 +33,12 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
 interface ArticleActionsProps {
   article: Article;
   onUpdateArticle: (articleData: UpdateArticleData) => Promise<boolean>;
   onDeleteArticle: (articleId: string) => Promise<boolean>;
-  //onCopyUrl?: () => void;
   triggerVariant?: "icon" | "text";
   align?: "start" | "center" | "end";
 }
@@ -49,7 +47,6 @@ export function ArticleActions({
   article,
   onUpdateArticle,
   onDeleteArticle,
-  //onCopyUrl,
   triggerVariant = "icon",
   align = "end",
 }: ArticleActionsProps) {

@@ -65,7 +65,6 @@ export function LinkActions({
     if (onCopyUrl) {
       onCopyUrl();
     } else {
-      // Default implementation if no custom handler is provided
       navigator.clipboard.writeText(link.url);
     }
   };
