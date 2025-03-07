@@ -8,6 +8,9 @@ dependencies:
   '@hookform/resolvers':
     specifier: ^4.1.2
     version: 4.1.2(react-hook-form@7.54.2)
+  '@icons-pack/react-simple-icons':
+    specifier: ^12.1.0
+    version: 12.1.0(react@19.0.0)
   '@mozilla/readability':
     specifier: ^0.5.0
     version: 0.5.0
@@ -362,6 +365,14 @@ packages:
     resolution: {integrity: sha512-xeO57FpIu4p1Ri3Jq/EXq4ClRm86dVF2z/+kvFnyqVYRavTZmaFaUBbWCOuuTh0o/g7DSsk6kc2vrS4Vl5oPOQ==}
     engines: {node: '>=18.18'}
     dev: true
+
+  /@icons-pack/react-simple-icons@12.1.0(react@19.0.0):
+    resolution: {integrity: sha512-4pj96IXQJ0FpUKouzdC5mnie6bdy5/8fPk8GIGFp6/sPUVF9WcKarQgUCFzT2vb8zkWHudjTHLdjtDoztmNNhQ==}
+    peerDependencies:
+      react: ^16.13 || ^17 || ^18 || ^19
+    dependencies:
+      react: 19.0.0
+    dev: false
 
   /@img/sharp-darwin-arm64@0.33.5:
     resolution: {integrity: sha512-UT4p+iz/2H4twwAoLCqfA9UH5pI6DggwKEGuaPy7nCVQ8ZsiY5PIcrRvD1DzuY3qYL07NtIQcWnBSY/heikIFQ==}
