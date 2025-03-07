@@ -23,7 +23,7 @@ import {
   TagIcon,
 } from "lucide-react";
 import { UpdateArticleData } from "@/hooks/useArticles";
-import { ViewArticleSheet } from "@/components/global/Sheets/ViewArticleSheet";
+import { ViewArticleSheet } from "@/components/global/sheets/ViewArticleSheet";
 import {
   AlertDialog,
   AlertDialogAction,

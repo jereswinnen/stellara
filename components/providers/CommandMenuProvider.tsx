@@ -16,10 +16,10 @@ import {
   CommandItem,
   CommandShortcut,
 } from "@/components/ui/command";
-import { AddArticleSheet } from "@/components/global/Sheets/AddArticleSheet";
-import { AddBookSheet } from "@/components/global/Sheets/AddBookSheet";
-import { AddLinkSheet } from "@/components/global/Sheets/AddLinkSheet";
-import { AddNoteSheet } from "@/components/global/Sheets/AddNoteSheet";
+import { AddArticleSheet } from "@/components/global/sheets/AddArticleSheet";
+import { AddBookSheet } from "@/components/global/sheets/AddBookSheet";
+import { AddLinkSheet } from "@/components/global/sheets/AddLinkSheet";
+import { AddNoteSheet } from "@/components/global/sheets/AddNoteSheet";
 import { useArticles } from "@/hooks/useArticles";
 import { useBooks } from "@/hooks/useBooks";
 import { useLinks } from "@/hooks/useLinks";

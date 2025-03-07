@@ -3,8 +3,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LinkIcon, PlusIcon, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { AddLinkSheet } from "@/components/global/Sheets/AddLinkSheet";
-import { ViewLinkSheet } from "@/components/global/Sheets/ViewLinkSheet";
+import { AddLinkSheet } from "@/components/global/sheets/AddLinkSheet";
+import { ViewLinkSheet } from "@/components/global/sheets/ViewLinkSheet";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";

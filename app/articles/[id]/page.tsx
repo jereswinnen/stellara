@@ -29,17 +29,7 @@ import {
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { ViewArticleSheet } from "@/components/global/Sheets/ViewArticleSheet";
+import { ViewArticleSheet } from "@/components/global/sheets/ViewArticleSheet";
 import { ArticleActions } from "@/components/global/ArticleActions";
 
 export default function ArticleDetailPage() {
@@ -49,8 +39,6 @@ export default function ArticleDetailPage() {
   const router = useRouter();
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
-  const [deleting, setDeleting] = useState(false);
   const [showEditSheet, setShowEditSheet] = useState(false);
 
   useReaderBackground();
@@ -129,7 +117,6 @@ export default function ArticleDetailPage() {
     if (!user || !article) return false;
 
     try {
-      setDeleting(true);
       const { error } = await supabase
         .from("articles")
         .delete()
@@ -150,8 +137,6 @@ export default function ArticleDetailPage() {
     } catch (error) {
       console.error("Error deleting article:", error);
       return false;
-    } finally {
-      setDeleting(false);
     }
   };
 
@@ -260,35 +245,6 @@ export default function ArticleDetailPage() {
             </div>
           )} */}
         </div>
-
-        <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-              <AlertDialogDescription>
-                This action cannot be undone. This will permanently delete the
-                article from your account.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDelete}
-                disabled={deleting}
-                className="bg-destructive text-white hover:bg-destructive/90"
-              >
-                {deleting ? (
-                  <>
-                    <Loader2 className="size-4 animate-spin" />
-                    Deleting...
-                  </>
-                ) : (
-                  "Delete"
-                )}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
 
         {article && (
           <ViewArticleSheet

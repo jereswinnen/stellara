@@ -21,7 +21,7 @@ import {
   TagIcon,
   Pencil,
 } from "lucide-react";
-import { ViewLinkSheet } from "@/components/global/Sheets/ViewLinkSheet";
+import { ViewLinkSheet } from "@/components/global/sheets/ViewLinkSheet";
 import {
   AlertDialog,
   AlertDialogAction,

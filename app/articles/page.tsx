@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { useArticles } from "@/hooks/useArticles";
 import { supabase, Article } from "@/lib/supabase";
-import { AddArticleSheet } from "@/components/global/Sheets/AddArticleSheet";
+import { AddArticleSheet } from "@/components/global/sheets/AddArticleSheet";
 import { articleEvents } from "@/components/widgets/Articles";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
