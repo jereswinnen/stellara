@@ -1,6 +1,3 @@
-/**
- * Interface for URL metadata
- */
 export interface UrlMetadata {
   title: string;
   image?: string;

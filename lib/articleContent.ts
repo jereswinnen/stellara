@@ -1,6 +1,3 @@
-/**
- * Interface for article content
- */
 export interface ArticleContent {
   content: string;
   textContent?: string;

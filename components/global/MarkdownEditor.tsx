@@ -2,7 +2,6 @@
 
 import React, { useState, useRef, useCallback, KeyboardEvent } from "react";
 import { Textarea } from "@/components/ui/textarea";
-import { Toggle } from "@/components/ui/toggle";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import {
   Bold,
