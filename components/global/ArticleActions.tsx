@@ -40,7 +40,7 @@ interface ArticleActionsProps {
   article: Article;
   onUpdateArticle: (articleData: UpdateArticleData) => Promise<boolean>;
   onDeleteArticle: (articleId: string) => Promise<boolean>;
-  onCopyUrl?: () => void;
+  //onCopyUrl?: () => void;
   triggerVariant?: "icon" | "text";
   align?: "start" | "center" | "end";
 }
@@ -49,38 +49,49 @@ export function ArticleActions({
   article,
   onUpdateArticle,
   onDeleteArticle,
-  onCopyUrl,
+  //onCopyUrl,
   triggerVariant = "icon",
   align = "end",
 }: ArticleActionsProps) {
   const [showEditSheet, setShowEditSheet] = useState(false);
+  const [updatingFavorite, setUpdatingFavorite] = useState(false);
+  const [updatingArchive, setUpdatingArchive] = useState(false);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  const handleToggleFavorite = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    await onUpdateArticle({
-      id: article.id,
-      is_favorite: !article.is_favorite,
-    });
+  const handleToggleFavorite = async (e?: React.MouseEvent) => {
+    if (!article) return;
+    if (e) e.stopPropagation();
+
+    try {
+      setUpdatingFavorite(true);
+      await onUpdateArticle({
+        id: article.id,
+        is_favorite: !article.is_favorite,
+      });
+    } finally {
+      setUpdatingFavorite(false);
+    }
   };
 
   const handleToggleArchive = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    await onUpdateArticle({
-      id: article.id,
-      is_archive: !article.is_archive,
-    });
+    if (!article) return;
+    if (e) e.stopPropagation();
+
+    try {
+      setUpdatingArchive(true);
+      await onUpdateArticle({
+        id: article.id,
+        is_archive: !article.is_archive,
+      });
+    } finally {
+      setUpdatingArchive(false);
+    }
   };
 
   const handleCopyUrl = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (onCopyUrl) {
-      onCopyUrl();
-    } else {
-      // Default implementation if no custom handler is provided
-      navigator.clipboard.writeText(article.url);
-    }
+    navigator.clipboard.writeText(article.url);
   };
 
   const handleOpenEditSheet = (e: React.MouseEvent) => {

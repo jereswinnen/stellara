@@ -86,6 +86,15 @@ export function Navigation() {
           </MenubarItem>
         </MenubarContent>
       </MenubarMenu>
+
+      <MenubarMenu>
+        <MenubarTrigger>Settings</MenubarTrigger>
+        <MenubarContent>
+          <Link href="/settings" passHref>
+            <MenubarItem>User Preferences</MenubarItem>
+          </Link>
+        </MenubarContent>
+      </MenubarMenu>
     </Menubar>
   );
 }

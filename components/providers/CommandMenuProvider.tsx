@@ -30,6 +30,7 @@ import {
   FileTextIcon,
   LayoutDashboardIcon,
   StickyNoteIcon,
+  SettingsIcon,
 } from "lucide-react";
 import { NewBookData } from "@/hooks/useBooks";
 import { NewLinkData } from "@/hooks/useLinks";
@@ -301,6 +302,10 @@ export function CommandMenuProvider({
             <CommandItem onSelect={() => navigateTo("/notes")}>
               <StickyNoteIcon className="h-4 w-4" />
               Notes
+            </CommandItem>
+            <CommandItem onSelect={() => navigateTo("/settings")}>
+              <SettingsIcon className="h-4 w-4" />
+              Settings
             </CommandItem>
           </CommandGroup>
 

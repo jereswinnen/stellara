@@ -43,6 +43,7 @@ CREATE TABLE users (
     full_name TEXT,
     avatar_url TEXT,
     role user_role DEFAULT 'user',
+    preferences JSONB DEFAULT '{}',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
 );

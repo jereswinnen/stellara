@@ -6,22 +6,16 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { supabase, Article } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useUserPreferences } from "@/components/providers/UserPreferencesProvider";
+import { useReaderBackground } from "@/hooks/preferences/useReaderBackground";
 import {
   Loader2,
   SquareArrowOutUpRight,
-  Ellipsis,
   ChevronLeft,
-  Trash2,
-  ClipboardCopy,
-  ArchiveX,
-  Archive,
-  Star,
-  StarOff,
   ArrowLeft,
   BookOpen,
   Glasses,
   Clock,
-  TagIcon,
 } from "lucide-react";
 import { UpdateArticleData } from "@/hooks/useArticles";
 import { articleEvents } from "@/components/widgets/Articles";
@@ -29,10 +23,11 @@ import { formatReadingTime } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
@@ -50,14 +45,15 @@ import { ArticleActions } from "@/components/global/ArticleActions";
 export default function ArticleDetailPage() {
   const { id } = useParams();
   const { user, loading: authLoading } = useAuth();
+  const { preferences, updatePreference } = useUserPreferences();
   const router = useRouter();
   const [article, setArticle] = useState<Article | null>(null);
   const [loading, setLoading] = useState(true);
-  const [updatingFavorite, setUpdatingFavorite] = useState(false);
-  const [updatingArchive, setUpdatingArchive] = useState(false);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [showEditSheet, setShowEditSheet] = useState(false);
+
+  useReaderBackground();
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -129,43 +125,6 @@ export default function ArticleDetailPage() {
     }
   };
 
-  const handleToggleFavorite = async () => {
-    if (!article) return;
-
-    try {
-      setUpdatingFavorite(true);
-      const updatedArticle = {
-        id: article.id,
-        is_favorite: !article.is_favorite,
-      };
-
-      await updateArticle(updatedArticle);
-    } finally {
-      setUpdatingFavorite(false);
-    }
-  };
-
-  const handleToggleArchive = async () => {
-    if (!article) return;
-
-    try {
-      setUpdatingArchive(true);
-      const updatedArticle = {
-        id: article.id,
-        is_archive: !article.is_archive,
-      };
-
-      await updateArticle(updatedArticle);
-    } finally {
-      setUpdatingArchive(false);
-    }
-  };
-
-  const handleCopyUrl = () => {
-    navigator.clipboard.writeText(window.location.href);
-    // You could add a toast notification here
-  };
-
   const handleDelete = async () => {
     if (!user || !article) return false;
 
@@ -218,23 +177,65 @@ export default function ArticleDetailPage() {
   }
 
   return (
-    <div className="container max-w-3xl mx-auto py-8 flex flex-col gap-5">
+    <div className={`container max-w-3xl mx-auto py-8`}>
       <header className="flex flex-col gap-8">
         <div className="flex items-center justify-between">
-          <Button
-            size="icon"
-            variant="outline"
-            onClick={() => router.push("/articles")}
-          >
-            <ChevronLeft className="size-5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              size="icon"
+              variant="outline"
+              onClick={() => router.push("/articles")}
+            >
+              <ChevronLeft className="size-5" />
+            </Button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Glasses className="size-4 mr-2" />
+                  Reading Mode
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuLabel>Background Color</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuRadioGroup
+                  value={preferences.readerBackgroundColor}
+                  onValueChange={(value) =>
+                    updatePreference(
+                      "readerBackgroundColor",
+                      value as "default" | "green" | "sepia"
+                    )
+                  }
+                >
+                  <DropdownMenuRadioItem value="default">
+                    <div className="flex items-center">
+                      <div className="w-4 h-4 rounded border mr-2 bg-background"></div>
+                      Default
+                    </div>
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="green">
+                    <div className="flex items-center">
+                      <div className="w-4 h-4 rounded border mr-2 bg-green-50 dark:bg-green-950"></div>
+                      Green
+                    </div>
+                  </DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="sepia">
+                    <div className="flex items-center">
+                      <div className="w-4 h-4 rounded border mr-2 bg-amber-50 dark:bg-amber-950"></div>
+                      Sepia
+                    </div>
+                  </DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
 
           {article && (
             <ArticleActions
               article={article}
               onUpdateArticle={updateArticle}
               onDeleteArticle={handleDelete}
-              onCopyUrl={handleCopyUrl}
             />
           )}
         </div>
