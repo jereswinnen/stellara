@@ -5,15 +5,18 @@ import { useSearchParams } from "next/navigation";
 import { Rainbow } from "lucide-react";
 import { SignInForm } from "@/components/auth/SignInForm";
 import { SignUpForm } from "@/components/auth/SignUpForm";
+import { PasswordResetForm } from "@/components/auth/PasswordResetForm";
 
 export default function AuthPage() {
   const searchParams = useSearchParams();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [mode, setMode] = useState<"signin" | "signup" | "reset">("signin");
 
   useEffect(() => {
     const modeParam = searchParams.get("mode");
     if (modeParam === "signup") {
       setMode("signup");
+    } else if (modeParam === "reset") {
+      setMode("reset");
     } else {
       setMode("signin");
     }
@@ -32,7 +35,9 @@ export default function AuthPage() {
         </div>
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-sm">
-            {mode === "signin" ? <SignInForm /> : <SignUpForm />}
+            {mode === "signin" && <SignInForm />}
+            {mode === "signup" && <SignUpForm />}
+            {mode === "reset" && <PasswordResetForm />}
           </div>
         </div>
       </div>

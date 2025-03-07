@@ -23,9 +23,9 @@ export function Navigation() {
 
   const pathname = usePathname();
 
-  // Don't show navigation on auth page or article detail pages
   const shouldHideNavigation =
     pathname === "/auth" ||
+    pathname.startsWith("/auth/") ||
     (pathname.startsWith("/articles/") && pathname !== "/articles");
 
   if (shouldHideNavigation) {

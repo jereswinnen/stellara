@@ -60,7 +60,7 @@ export function SignInForm({
           <div className="flex items-center">
             <Label htmlFor="password">Password</Label>
             <a
-              href="#"
+              href="/auth?mode=reset"
               tabIndex={-1}
               className="ml-auto text-sm underline-offset-4 hover:underline"
             >
