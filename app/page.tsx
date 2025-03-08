@@ -10,6 +10,7 @@ import { OnThisDay } from "@/components/widgets/OnThisDay";
 import { Books } from "@/components/widgets/Books";
 import { Links } from "@/components/widgets/Links";
 import { Articles } from "@/components/widgets/Articles";
+import { Podcasts } from "@/components/widgets/Podcasts";
 import { Button } from "@/components/ui/button";
 
 export default function Home() {
@@ -83,6 +84,11 @@ export default function Home() {
         {/* Articles Module */}
         <div className="col-span-full lg:col-span-4">
           <Articles />
+        </div>
+
+        {/* Podcasts Module */}
+        <div className="col-span-full lg:col-span-2">
+          <Podcasts />
         </div>
 
         {/* PokemonOfTheDay Module */}

@@ -19,6 +19,7 @@ export function Navigation() {
     openAddLinkSheet,
     openAddArticleSheet,
     openAddNoteSheet,
+    openAddPodcastFeedSheet,
   } = useCommandMenu();
 
   const pathname = usePathname();
@@ -95,6 +96,20 @@ export function Navigation() {
           <MenubarItem onSelect={openAddNoteSheet}>
             Add Note
             <MenubarShortcut>⌘N</MenubarShortcut>
+          </MenubarItem>
+        </MenubarContent>
+      </MenubarMenu>
+
+      <MenubarMenu>
+        <MenubarTrigger>Podcasts</MenubarTrigger>
+        <MenubarContent>
+          <Link href="/podcasts" passHref>
+            <MenubarItem>All Podcasts</MenubarItem>
+          </Link>
+          <MenubarSeparator />
+          <MenubarItem onSelect={openAddPodcastFeedSheet}>
+            Add Podcast Feed
+            <MenubarShortcut>⌘P</MenubarShortcut>
           </MenubarItem>
         </MenubarContent>
       </MenubarMenu>

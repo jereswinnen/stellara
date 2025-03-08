@@ -63,3 +63,30 @@ export function formatReadingTime(minutes?: number): string {
   if (!minutes) return "1 min read";
   return `${minutes} min read`;
 }
+
+/**
+ * Formats duration in seconds to a readable time format (HH:MM:SS or MM:SS)
+ *
+ * @param seconds Duration in seconds
+ * @returns Formatted duration string (e.g., "1:23:45" or "3:45")
+ */
+export function formatDuration(seconds: number): string {
+  if (!seconds || seconds <= 0) return "0:00";
+
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const remainingSeconds = Math.floor(seconds % 60);
+
+  // Format with leading zeros for minutes and seconds
+  const formattedMinutes = minutes.toString();
+  const formattedSeconds = remainingSeconds.toString().padStart(2, "0");
+
+  // Include hours only if duration is 1 hour or longer
+  if (hours > 0) {
+    return `${hours}:${minutes
+      .toString()
+      .padStart(2, "0")}:${formattedSeconds}`;
+  }
+
+  return `${formattedMinutes}:${formattedSeconds}`;
+}

@@ -158,6 +158,99 @@ export type Database = {
           updated_at?: string;
         };
       };
+      podcast_feeds: {
+        Row: {
+          id: string;
+          user_id: string;
+          feed_url: string;
+          title: string;
+          author: string;
+          description: string;
+          artwork_url: string;
+          website_url: string;
+          last_updated: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          user_id: string;
+          feed_url: string;
+          title: string;
+          author: string;
+          description?: string;
+          artwork_url?: string;
+          website_url?: string;
+          last_updated?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          feed_url?: string;
+          title?: string;
+          author?: string;
+          description?: string;
+          artwork_url?: string;
+          website_url?: string;
+          last_updated?: string;
+          updated_at?: string;
+        };
+      };
+      podcast_episodes: {
+        Row: {
+          id: string;
+          feed_id: string;
+          user_id: string;
+          guid: string;
+          title: string;
+          description: string;
+          audio_url: string;
+          published_date: string;
+          duration: number;
+          image_url: string | null;
+          is_played: boolean;
+          is_favorite: boolean;
+          is_archived: boolean;
+          play_position: number;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          feed_id: string;
+          user_id: string;
+          guid: string;
+          title: string;
+          description?: string;
+          audio_url: string;
+          published_date?: string;
+          duration?: number;
+          image_url?: string | null;
+          is_played?: boolean;
+          is_favorite?: boolean;
+          is_archived?: boolean;
+          play_position?: number;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          title?: string;
+          description?: string;
+          audio_url?: string;
+          published_date?: string;
+          duration?: number;
+          image_url?: string | null;
+          is_played?: boolean;
+          is_favorite?: boolean;
+          is_archived?: boolean;
+          play_position?: number;
+          updated_at?: string;
+        };
+      };
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      [_ in never]: never;
     };
     Enums: {
       user_role: "user" | "admin";
