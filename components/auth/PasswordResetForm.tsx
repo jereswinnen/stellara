@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Loader2 } from "lucide-react";
 
 export function PasswordResetForm({
   className,
@@ -67,7 +68,14 @@ export function PasswordResetForm({
           </p>
         )}
         <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? "Sending reset link..." : "Send reset link"}
+          {isLoading ? (
+            <>
+              <Loader2 className="size-4 animate-spin" />
+              Sending reset link...
+            </>
+          ) : (
+            <>Send reset link</>
+          )}
         </Button>
       </div>
       <div className="flex items-center justify-center gap-1 text-sm">

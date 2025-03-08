@@ -62,11 +62,11 @@ export default function AuthPage() {
               </p>
             </article>
             <figure className="absolute size-full">
-              <div className="absolute size-full dark:inset-ring inset-ring-white/40 bg-gradient-to-b from-green-700 to-amber-800 mix-blend-multiply rounded-xl" />
+              <div className="absolute size-full dark:inset-ring inset-ring-white/40 bg-gradient-to-b from-green-400 to-amber-500 dark:from-green-700 dark:to-amber-800 mix-blend-multiply rounded-3xl" />
               <img
                 src="https://images.unsplash.com/photo-1740056282561-dbb187532373?q=80&w=3000&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
                 alt="Image"
-                className="size-full rounded-xl object-cover"
+                className="size-full rounded-3xl object-cover"
               />
             </figure>
           </div>
