@@ -3,6 +3,8 @@
 import { AuthProvider, useAuth } from "@/components/providers/AuthProvider";
 import { TagsProvider } from "@/components/providers/TagsProvider";
 import { UserPreferencesProvider } from "@/components/providers/UserPreferencesProvider";
+import { AudioPlayerProvider } from "@/components/providers/AudioPlayerProvider";
+import { AudioPlayer } from "@/components/AudioPlayer";
 
 export function ProvidersWrapper({ children }: { children: React.ReactNode }) {
   return (
@@ -17,7 +19,14 @@ function NestedProviders({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   return (
     <TagsProvider user={user}>
-      <UserPreferencesProvider>{children}</UserPreferencesProvider>
+      <UserPreferencesProvider>
+        <AudioPlayerProvider>
+          <>
+            {children}
+            <AudioPlayer />
+          </>
+        </AudioPlayerProvider>
+      </UserPreferencesProvider>
     </TagsProvider>
   );
 }

@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { usePodcasts } from "@/hooks/usePodcasts";
 import { useCommandMenu } from "@/components/providers/CommandMenuProvider";
+import { useAudioPlayer } from "@/components/providers/AudioPlayerProvider";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -20,6 +21,7 @@ import {
   PlusIcon,
   RefreshCwIcon,
   Trash2Icon,
+  Loader2,
 } from "lucide-react";
 import { PodcastEpisode, PodcastFeed } from "@/hooks/usePodcasts";
 import { formatDuration } from "@/lib/utils";
@@ -34,13 +36,19 @@ export default function PodcastsPage() {
     deletePodcastFeed,
     updateEpisodeStatus,
   } = usePodcasts(user);
+  const { playEpisode, currentEpisode, isLoading } = useAudioPlayer();
   const { openAddPodcastFeedSheet } = useCommandMenu();
   const [activeTab, setActiveTab] = useState("all");
   const [expandedEpisodes, setExpandedEpisodes] = useState<Set<string>>(
     new Set()
   );
   const [refreshingFeed, setRefreshingFeed] = useState<string | null>(null);
-  const [playingEpisode, setPlayingEpisode] = useState<string | null>(null);
+  const [playerVisible, setPlayerVisible] = useState(false);
+
+  // Update player visibility when currentEpisode changes
+  useEffect(() => {
+    setPlayerVisible(!!currentEpisode);
+  }, [currentEpisode]);
 
   // Toggle episode expanded state
   const toggleEpisodeExpanded = (episodeId: string) => {
@@ -76,18 +84,13 @@ export default function PodcastsPage() {
 
   // Handle playing an episode
   const handlePlayEpisode = async (episode: PodcastEpisode) => {
-    setPlayingEpisode(episode.id);
-
     // Mark as played if not already
     if (!episode.is_played) {
       await updateEpisodeStatus(episode.id, { is_played: true });
     }
 
-    // In a real implementation, this would start the audio player
-    // For now, we'll just simulate it
-    setTimeout(() => {
-      setPlayingEpisode(null);
-    }, 1000);
+    // Play the episode using the audio player
+    playEpisode(episode);
   };
 
   // Handle toggling favorite status
@@ -249,6 +252,8 @@ export default function PodcastsPage() {
                 {filteredEpisodes.map((episode) => {
                   const feed = getFeedById(episode.feed_id);
                   const isExpanded = expandedEpisodes.has(episode.id);
+                  const isPlaying = currentEpisode?.id === episode.id;
+                  const isCurrentlyLoading = isPlaying && isLoading;
 
                   return (
                     <Card key={episode.id}>
@@ -279,6 +284,16 @@ export default function PodcastsPage() {
                               )}
                               {episode.duration > 0 &&
                                 ` • ${formatDuration(episode.duration)}`}
+                              {episode.play_position > 0 && !isPlaying && (
+                                <span className="ml-1 text-primary">
+                                  •{" "}
+                                  {Math.floor(
+                                    (episode.play_position / episode.duration) *
+                                      100
+                                  )}
+                                  % played
+                                </span>
+                              )}
                             </CardDescription>
                           </div>
                         </div>
@@ -325,9 +340,14 @@ export default function PodcastsPage() {
                                 variant="default"
                                 size="sm"
                                 onClick={() => handlePlayEpisode(episode)}
-                                disabled={playingEpisode === episode.id}
+                                disabled={isPlaying}
                               >
-                                {playingEpisode === episode.id ? (
+                                {isCurrentlyLoading ? (
+                                  <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    Loading...
+                                  </>
+                                ) : isPlaying ? (
                                   <>
                                     <HeadphonesIcon className="mr-2 h-4 w-4 animate-pulse" />
                                     Playing...
@@ -351,6 +371,9 @@ export default function PodcastsPage() {
           </div>
         </>
       )}
+
+      {/* Add padding at the bottom to account for the audio player */}
+      {playerVisible && <div className="h-20" />}
     </div>
   );
 }
