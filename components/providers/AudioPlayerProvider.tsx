@@ -10,6 +10,10 @@ import React, {
 } from "react";
 import { PodcastEpisode, usePodcasts } from "@/hooks/usePodcasts";
 import { useAuth } from "./AuthProvider";
+import { useAudioPlayerPreferences } from "./UserPreferencesProvider";
+
+// Available playback speeds
+export const PLAYBACK_SPEEDS = [0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
 
 interface AudioPlayerContextType {
   currentEpisode: PodcastEpisode | null;
@@ -19,6 +23,8 @@ interface AudioPlayerContextType {
   currentTime: number;
   forwardSkipSeconds: number;
   backwardSkipSeconds: number;
+  playbackSpeed: number;
+  availablePlaybackSpeeds: number[];
   playEpisode: (episode: PodcastEpisode) => void;
   pauseEpisode: () => void;
   resumeEpisode: () => void;
@@ -27,6 +33,7 @@ interface AudioPlayerContextType {
   skipBackward: (seconds?: number) => void;
   togglePlayPause: () => void;
   stopEpisode: () => void;
+  setPlaybackSpeed: (speed: number) => void;
 }
 
 const AudioPlayerContext = createContext<AudioPlayerContextType | undefined>(
@@ -40,6 +47,9 @@ export function AudioPlayerProvider({
 }) {
   const { user } = useAuth();
   const { updateEpisodeStatus } = usePodcasts(user);
+  const { audioPreferences, updateAudioPreference } =
+    useAudioPlayerPreferences();
+
   const [currentEpisode, setCurrentEpisode] = useState<PodcastEpisode | null>(
     null
   );
@@ -47,17 +57,20 @@ export function AudioPlayerProvider({
   const [isLoading, setIsLoading] = useState(false);
   const [duration, setDuration] = useState(0);
   const [currentTime, setCurrentTime] = useState(0);
+  const [playbackSpeed, setPlaybackSpeedState] = useState(
+    audioPreferences.playbackSpeed
+  );
+
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const savePositionTimerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Default skip durations
-  const forwardSkipSeconds = 30;
-  const backwardSkipSeconds = 15;
 
   // Initialize audio element
   useEffect(() => {
     const audio = new Audio();
     audioRef.current = audio;
+
+    // Set initial playback speed
+    audio.playbackRate = playbackSpeed;
 
     // Set up event listeners
     audio.addEventListener("timeupdate", handleTimeUpdate);
@@ -89,6 +102,14 @@ export function AudioPlayerProvider({
       }
     };
   }, []);
+
+  // Update playback speed when preferences change
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.playbackRate = audioPreferences.playbackSpeed;
+      setPlaybackSpeedState(audioPreferences.playbackSpeed);
+    }
+  }, [audioPreferences.playbackSpeed]);
 
   // Save play position periodically (every 10 seconds)
   useEffect(() => {
@@ -184,6 +205,9 @@ export function AudioPlayerProvider({
         setIsLoading(true);
         audioRef.current.src = episode.audio_url;
 
+        // Set playback speed
+        audioRef.current.playbackRate = playbackSpeed;
+
         // Restore previous play position if available
         if (episode.play_position > 0) {
           audioRef.current.currentTime = episode.play_position;
@@ -201,7 +225,7 @@ export function AudioPlayerProvider({
           });
       }
     },
-    [currentEpisode, savePlayPosition]
+    [currentEpisode, savePlayPosition, playbackSpeed]
   );
 
   const pauseEpisode = useCallback(() => {
@@ -240,7 +264,7 @@ export function AudioPlayerProvider({
   );
 
   const skipForward = useCallback(
-    (seconds = forwardSkipSeconds) => {
+    (seconds = audioPreferences.forwardSkipSeconds) => {
       if (audioRef.current && currentEpisode) {
         setIsLoading(true);
         const newTime = Math.min(
@@ -251,11 +275,11 @@ export function AudioPlayerProvider({
         setCurrentTime(newTime);
       }
     },
-    [currentEpisode, duration, forwardSkipSeconds]
+    [currentEpisode, duration, audioPreferences.forwardSkipSeconds]
   );
 
   const skipBackward = useCallback(
-    (seconds = backwardSkipSeconds) => {
+    (seconds = audioPreferences.backwardSkipSeconds) => {
       if (audioRef.current && currentEpisode) {
         setIsLoading(true);
         const newTime = Math.max(audioRef.current.currentTime - seconds, 0);
@@ -263,7 +287,7 @@ export function AudioPlayerProvider({
         setCurrentTime(newTime);
       }
     },
-    [currentEpisode, backwardSkipSeconds]
+    [currentEpisode, audioPreferences.backwardSkipSeconds]
   );
 
   const togglePlayPause = useCallback(() => {
@@ -293,14 +317,28 @@ export function AudioPlayerProvider({
     }
   }, [currentEpisode, savePlayPosition]);
 
+  // Set playback speed
+  const setPlaybackSpeed = useCallback(
+    (speed: number) => {
+      if (audioRef.current) {
+        audioRef.current.playbackRate = speed;
+        setPlaybackSpeedState(speed);
+        updateAudioPreference("playbackSpeed", speed);
+      }
+    },
+    [updateAudioPreference]
+  );
+
   const value = {
     currentEpisode,
     isPlaying,
     isLoading,
     duration,
     currentTime,
-    forwardSkipSeconds,
-    backwardSkipSeconds,
+    forwardSkipSeconds: audioPreferences.forwardSkipSeconds,
+    backwardSkipSeconds: audioPreferences.backwardSkipSeconds,
+    playbackSpeed,
+    availablePlaybackSpeeds: PLAYBACK_SPEEDS,
     playEpisode,
     pauseEpisode,
     resumeEpisode,
@@ -309,6 +347,7 @@ export function AudioPlayerProvider({
     skipBackward,
     togglePlayPause,
     stopEpisode,
+    setPlaybackSpeed,
   };
 
   return (

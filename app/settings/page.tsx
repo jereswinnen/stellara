@@ -3,7 +3,11 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { useUserPreferences } from "@/components/providers/UserPreferencesProvider";
+import {
+  useUserPreferences,
+  useAudioPlayerPreferences,
+} from "@/components/providers/UserPreferencesProvider";
+import { PLAYBACK_SPEEDS } from "@/components/providers/AudioPlayerProvider";
 import {
   Card,
   CardContent,
@@ -13,6 +17,15 @@ import {
 } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Slider } from "@/components/ui/slider";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 
 export default function SettingsPage() {
   const { user, loading } = useAuth();
@@ -21,6 +34,8 @@ export default function SettingsPage() {
     updatePreference,
     isLoading: preferencesLoading,
   } = useUserPreferences();
+  const { audioPreferences, updateAudioPreference } =
+    useAudioPlayerPreferences();
   const router = useRouter();
 
   useEffect(() => {
@@ -40,6 +55,11 @@ export default function SettingsPage() {
   if (!user) {
     return null;
   }
+
+  // Format playback speed for display
+  const formatPlaybackSpeed = (speed: number) => {
+    return `${speed.toFixed(2).replace(/\.00$/, "")}×`;
+  };
 
   return (
     <div className="container mx-auto p-4 md:p-8">
@@ -92,6 +112,82 @@ export default function SettingsPage() {
                   </Label>
                 </div>
               </RadioGroup>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Podcast Player Preferences</CardTitle>
+            <CardDescription>
+              Customize your podcast listening experience
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            {/* Skip Forward Duration */}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <Label htmlFor="forward-skip">Skip Forward Duration</Label>
+                <span className="text-sm font-medium">
+                  {audioPreferences.forwardSkipSeconds} seconds
+                </span>
+              </div>
+              <Slider
+                id="forward-skip"
+                value={[audioPreferences.forwardSkipSeconds]}
+                min={5}
+                max={60}
+                step={5}
+                onValueChange={(value: number[]) =>
+                  updateAudioPreference("forwardSkipSeconds", value[0])
+                }
+              />
+            </div>
+
+            <Separator />
+
+            {/* Skip Backward Duration */}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <Label htmlFor="backward-skip">Skip Backward Duration</Label>
+                <span className="text-sm font-medium">
+                  {audioPreferences.backwardSkipSeconds} seconds
+                </span>
+              </div>
+              <Slider
+                id="backward-skip"
+                value={[audioPreferences.backwardSkipSeconds]}
+                min={5}
+                max={30}
+                step={5}
+                onValueChange={(value: number[]) =>
+                  updateAudioPreference("backwardSkipSeconds", value[0])
+                }
+              />
+            </div>
+
+            <Separator />
+
+            {/* Default Playback Speed */}
+            <div className="space-y-4">
+              <Label htmlFor="playback-speed">Default Playback Speed</Label>
+              <Select
+                value={audioPreferences.playbackSpeed.toString()}
+                onValueChange={(value) =>
+                  updateAudioPreference("playbackSpeed", parseFloat(value))
+                }
+              >
+                <SelectTrigger id="playback-speed" className="w-full">
+                  <SelectValue placeholder="Select playback speed" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PLAYBACK_SPEEDS.map((speed) => (
+                    <SelectItem key={speed} value={speed.toString()}>
+                      {formatPlaybackSpeed(speed)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </CardContent>
         </Card>
