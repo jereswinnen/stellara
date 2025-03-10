@@ -16,6 +16,7 @@ import {
   BookOpen,
   Glasses,
   Clock,
+  RefreshCw,
 } from "lucide-react";
 import { UpdateArticleData } from "@/hooks/useArticles";
 import { articleEvents } from "@/components/widgets/Articles";
@@ -31,6 +32,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ViewArticleSheet } from "@/components/global/sheets/ViewArticleSheet";
 import { ArticleActions } from "@/components/global/ArticleActions";
+import { fetchArticleContent } from "@/lib/articleContent";
 
 export default function ArticleDetailPage() {
   const { id } = useParams();
@@ -163,7 +165,7 @@ export default function ArticleDetailPage() {
 
   return (
     <div className={`container max-w-3xl mx-auto py-8`}>
-      <header className="flex flex-col gap-8">
+      <header className="flex flex-col gap-8 mb-8">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Button
@@ -264,10 +266,49 @@ export default function ArticleDetailPage() {
         />
       ) : (
         <div className="flex flex-col items-center justify-center py-12 text-center">
-          <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
+          <BookOpen className="  text-muted-foreground" />
           <p className="text-muted-foreground">
             No content available for this article
           </p>
+          <Button
+            variant="outline"
+            className="mt-4"
+            onClick={async () => {
+              try {
+                setLoading(true);
+                const articleContent = await fetchArticleContent(article.url);
+                if (articleContent && articleContent.content) {
+                  const { data, error } = await supabase
+                    .from("articles")
+                    .update({ body: articleContent.content })
+                    .eq("id", article.id)
+                    .eq("user_id", user?.id);
+
+                  if (error) throw error;
+
+                  // Update the article in state
+                  setArticle({
+                    ...article,
+                    body: articleContent.content,
+                  });
+
+                  // Show success message
+                  alert("Article content has been updated");
+                } else {
+                  // Show error message
+                  alert("Could not extract content from this article");
+                }
+              } catch (error) {
+                console.error("Error refreshing content:", error);
+                alert("Failed to refresh article content");
+              } finally {
+                setLoading(false);
+              }
+            }}
+          >
+            <RefreshCw className="size-4" />
+            Refresh Content
+          </Button>
           <a
             href={article.url}
             target="_blank"
@@ -275,7 +316,7 @@ export default function ArticleDetailPage() {
             className="mt-4"
           >
             <Button>
-              <SquareArrowOutUpRight className="h-4 w-4 mr-2" />
+              <SquareArrowOutUpRight className="size-4" />
               Visit Original Article
             </Button>
           </a>
