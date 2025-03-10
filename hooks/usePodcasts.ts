@@ -34,6 +34,7 @@ export interface PodcastEpisode {
   is_played: boolean;
   is_favorite: boolean;
   is_archived: boolean;
+  is_in_queue: boolean;
   play_position: number;
   created_at: string;
   updated_at: string;
@@ -148,6 +149,9 @@ export function usePodcasts(user: User | null) {
   const initialFetchDone = useRef(false);
   const userIdRef = useRef<string | null>(null);
 
+  // Cache for episode counts to avoid repeated API calls
+  const episodeCountCache = useRef<Record<string, number>>({});
+
   // Fetch all podcast feeds for the current user
   const fetchFeeds = async () => {
     if (!user) return;
@@ -232,32 +236,43 @@ export function usePodcasts(user: User | null) {
         return false;
       }
 
-      // Insert episodes from the feed
+      // Insert only the latest episode from the feed
       if (metadata.episodes && metadata.episodes.length > 0) {
-        const episodesToInsert = metadata.episodes.map((episode) => ({
+        // Sort episodes by published date (newest first)
+        const sortedEpisodes = [...metadata.episodes].sort(
+          (a, b) =>
+            new Date(b.publishedDate).getTime() -
+            new Date(a.publishedDate).getTime()
+        );
+
+        // Get the latest episode
+        const latestEpisode = sortedEpisodes[0];
+
+        const episodeToInsert = {
           feed_id: insertedFeed.id,
           user_id: user.id,
-          guid: episode.guid,
-          title: episode.title,
-          description: episode.description,
-          audio_url: episode.audioUrl,
-          published_date: episode.publishedDate,
-          duration: episode.duration,
-          image_url: episode.imageUrl || metadata.artworkUrl,
+          guid: latestEpisode.guid,
+          title: latestEpisode.title,
+          description: latestEpisode.description,
+          audio_url: latestEpisode.audioUrl,
+          published_date: latestEpisode.publishedDate,
+          duration: latestEpisode.duration,
+          image_url: latestEpisode.imageUrl || metadata.artworkUrl,
           is_played: false,
           is_favorite: false,
           is_archived: false,
+          is_in_queue: false,
           play_position: 0,
-        }));
+        };
 
-        const { error: episodesError } = await supabase
+        const { error: episodeError } = await supabase
           .from("podcast_episodes")
-          .insert(episodesToInsert)
+          .insert(episodeToInsert)
           .select();
 
-        if (episodesError) {
-          console.error("Error adding podcast episodes:", episodesError);
-          // Continue even if episodes fail, we can try again later
+        if (episodeError) {
+          console.error("Error adding podcast episode:", episodeError);
+          // Continue even if episode insertion fails, we can try again later
         }
       }
 
@@ -278,6 +293,7 @@ export function usePodcasts(user: User | null) {
       is_played?: boolean;
       is_favorite?: boolean;
       is_archived?: boolean;
+      is_in_queue?: boolean;
       play_position?: number;
     }
   ) => {
@@ -333,12 +349,63 @@ export function usePodcasts(user: User | null) {
     }
   };
 
-  // Refresh a podcast feed to get new episodes
+  // Get episode count for a podcast feed
+  const getEpisodeCountForFeed = async (feedId: string): Promise<number> => {
+    if (!user) return 0;
+
+    // Return from cache if available
+    if (episodeCountCache.current[feedId] !== undefined) {
+      return episodeCountCache.current[feedId];
+    }
+
+    try {
+      // First, get the feed from the database
+      const { data: feed, error: feedError } = await supabase
+        .from("podcast_feeds")
+        .select("*")
+        .eq("id", feedId)
+        .eq("user_id", user.id)
+        .single();
+
+      if (feedError || !feed) {
+        console.error("Error getting podcast feed:", feedError);
+        return 0;
+      }
+
+      // Fetch metadata from the feed URL to get episode count
+      const metadata = await fetchPodcastFeedMetadata(feed.feed_url);
+      if (!metadata || !metadata.episodes) {
+        console.error("Failed to fetch podcast feed metadata");
+        return 0;
+      }
+
+      // Store in cache
+      const count = metadata.episodes.length;
+      episodeCountCache.current[feedId] = count;
+
+      return count;
+    } catch (error) {
+      console.error("Error getting episode count for feed:", error);
+      return 0;
+    }
+  };
+
+  // Clear episode count cache for a specific feed
+  const clearEpisodeCountCache = (feedId: string) => {
+    delete episodeCountCache.current[feedId];
+  };
+
+  // Clear all episode count cache
+  const clearAllEpisodeCountCache = () => {
+    episodeCountCache.current = {};
+  };
+
+  // Refresh a podcast feed to get the latest episodes
   const refreshPodcastFeed = async (feedId: string) => {
     if (!user) return false;
 
     try {
-      // Get the feed
+      // Get the feed from the database
       const { data: feed, error: feedError } = await supabase
         .from("podcast_feeds")
         .select("*")
@@ -358,16 +425,17 @@ export function usePodcasts(user: User | null) {
         return false;
       }
 
-      // Update the feed
+      // Update the feed in the database
       const { error: updateError } = await supabase
         .from("podcast_feeds")
         .update({
-          title: metadata.title,
-          author: metadata.author,
-          description: metadata.description,
-          artwork_url: metadata.artworkUrl,
-          website_url: metadata.websiteUrl,
+          title: metadata.title || feed.title,
+          author: metadata.author || feed.author,
+          description: metadata.description || feed.description,
+          artwork_url: metadata.artworkUrl || feed.artwork_url,
+          website_url: metadata.websiteUrl || feed.website_url,
           last_updated: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
         })
         .eq("id", feedId)
         .eq("user_id", user.id);
@@ -377,53 +445,11 @@ export function usePodcasts(user: User | null) {
         return false;
       }
 
-      // Get existing episodes to avoid duplicates
-      const { data: existingEpisodes, error: episodesError } = await supabase
-        .from("podcast_episodes")
-        .select("guid")
-        .eq("feed_id", feedId)
-        .eq("user_id", user.id);
+      // Clear the episode count cache for this feed
+      clearEpisodeCountCache(feedId);
 
-      if (episodesError) {
-        console.error("Error getting existing episodes:", episodesError);
-        return false;
-      }
-
-      const existingGuids = new Set(
-        existingEpisodes.map((episode) => episode.guid)
-      );
-
-      // Filter out episodes that already exist
-      const newEpisodes = metadata.episodes.filter(
-        (episode) => !existingGuids.has(episode.guid)
-      );
-
-      if (newEpisodes.length > 0) {
-        const episodesToInsert = newEpisodes.map((episode) => ({
-          feed_id: feedId,
-          user_id: user.id,
-          guid: episode.guid,
-          title: episode.title,
-          description: episode.description,
-          audio_url: episode.audioUrl,
-          published_date: episode.publishedDate,
-          duration: episode.duration,
-          image_url: episode.imageUrl || metadata.artworkUrl,
-          is_played: false,
-          is_favorite: false,
-          is_archived: false,
-          play_position: 0,
-        }));
-
-        const { error: insertError } = await supabase
-          .from("podcast_episodes")
-          .insert(episodesToInsert);
-
-        if (insertError) {
-          console.error("Error adding new episodes:", insertError);
-          return false;
-        }
-      }
+      // We don't add episodes to the database here anymore
+      // Just update the feed metadata and return success
 
       await fetchFeeds();
       await fetchEpisodes();
@@ -432,6 +458,111 @@ export function usePodcasts(user: User | null) {
     } catch (error) {
       console.error("Error refreshing podcast feed:", error);
       return false;
+    }
+  };
+
+  // Fetch all episodes for a specific podcast feed
+  const fetchAllEpisodesForFeed = async (feedId: string) => {
+    if (!user) return [];
+
+    console.log(`fetchAllEpisodesForFeed: Starting fetch for feed ${feedId}`);
+
+    try {
+      // Get the feed from the database
+      const { data: feed, error: feedError } = await supabase
+        .from("podcast_feeds")
+        .select("*")
+        .eq("id", feedId)
+        .eq("user_id", user.id)
+        .single();
+
+      if (feedError || !feed) {
+        console.error("Error getting podcast feed:", feedError);
+        return [];
+      }
+
+      console.log(
+        `fetchAllEpisodesForFeed: Got feed ${feed.title}, fetching metadata`
+      );
+
+      // Fetch metadata from the feed URL to get all episodes
+      const metadata = await fetchPodcastFeedMetadata(feed.feed_url);
+      if (!metadata || !metadata.episodes) {
+        console.error("Failed to fetch podcast feed metadata");
+        return [];
+      }
+
+      console.log(
+        `fetchAllEpisodesForFeed: Got metadata with ${metadata.episodes.length} episodes`
+      );
+
+      // Get existing episodes from the database
+      const { data: existingEpisodes, error: episodesError } = await supabase
+        .from("podcast_episodes")
+        .select("*")
+        .eq("feed_id", feedId)
+        .eq("user_id", user.id);
+
+      if (episodesError) {
+        console.error("Error getting existing episodes:", episodesError);
+        return [];
+      }
+
+      console.log(
+        `fetchAllEpisodesForFeed: Found ${existingEpisodes.length} existing episodes in database`
+      );
+
+      // Create a map of existing episode GUIDs for quick lookup
+      const existingEpisodesMap = new Map(
+        existingEpisodes.map((episode) => [episode.guid, episode])
+      );
+
+      // Create a merged list of episodes from both the database and the feed
+      const allEpisodes = metadata.episodes.map((feedEpisode) => {
+        // If the episode exists in the database, use that version
+        const existingEpisode = existingEpisodesMap.get(feedEpisode.guid);
+        if (existingEpisode) {
+          return existingEpisode;
+        }
+
+        // Otherwise, create a temporary episode object (not stored in the database)
+        return {
+          id: `temp-${feedEpisode.guid}`, // Temporary ID for UI purposes
+          feed_id: feedId,
+          user_id: user.id,
+          guid: feedEpisode.guid,
+          title: feedEpisode.title,
+          description: feedEpisode.description,
+          audio_url: feedEpisode.audioUrl,
+          published_date: feedEpisode.publishedDate,
+          duration: feedEpisode.duration,
+          image_url: feedEpisode.imageUrl || feed.artwork_url,
+          is_played: false,
+          is_favorite: false,
+          is_archived: false,
+          is_in_queue: false,
+          play_position: 0,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+      });
+
+      const tempEpisodes = allEpisodes.filter((ep) =>
+        ep.id.startsWith("temp-")
+      ).length;
+      console.log(
+        `fetchAllEpisodesForFeed: Created merged list with ${allEpisodes.length} episodes (${tempEpisodes} temporary)`
+      );
+
+      // Sort episodes by published date (newest first)
+      return allEpisodes.sort(
+        (a, b) =>
+          new Date(b.published_date).getTime() -
+          new Date(a.published_date).getTime()
+      );
+    } catch (error) {
+      console.error("Error fetching all episodes for feed:", error);
+      return [];
     }
   };
 
@@ -455,8 +586,45 @@ export function usePodcasts(user: User | null) {
     updateEpisodeStatus,
     deletePodcastFeed,
     refreshPodcastFeed,
+    fetchAllEpisodesForFeed,
+    getEpisodeCountForFeed,
+    clearEpisodeCountCache,
+    clearAllEpisodeCountCache,
+    // Get inbox episodes (not archived, not in queue, not played)
+    inboxEpisodes: episodes
+      .filter(
+        (episode) =>
+          !episode.is_archived && !episode.is_in_queue && !episode.is_played
+      )
+      .sort(
+        (a, b) =>
+          new Date(b.published_date).getTime() -
+          new Date(a.published_date).getTime()
+      ),
+    // Get queue episodes
+    queueEpisodes: episodes
+      .filter((episode) => episode.is_in_queue)
+      .sort(
+        (a, b) =>
+          new Date(b.published_date).getTime() -
+          new Date(a.published_date).getTime()
+      ),
+    // Get favorite episodes
+    favoriteEpisodes: episodes
+      .filter((episode) => episode.is_favorite)
+      .sort(
+        (a, b) =>
+          new Date(b.published_date).getTime() -
+          new Date(a.published_date).getTime()
+      ),
+    // Get recent episodes for the homepage widget (not archived)
     recentEpisodes: episodes
       .filter((episode) => !episode.is_archived)
+      .sort(
+        (a, b) =>
+          new Date(b.published_date).getTime() -
+          new Date(a.published_date).getTime()
+      )
       .slice(0, 10),
   };
 }

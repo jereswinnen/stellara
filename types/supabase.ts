@@ -210,6 +210,7 @@ export type Database = {
           is_played: boolean;
           is_favorite: boolean;
           is_archived: boolean;
+          is_in_queue: boolean;
           play_position: number;
           created_at: string;
           updated_at: string;
@@ -227,6 +228,7 @@ export type Database = {
           is_played?: boolean;
           is_favorite?: boolean;
           is_archived?: boolean;
+          is_in_queue?: boolean;
           play_position?: number;
           created_at?: string;
           updated_at?: string;
@@ -241,6 +243,7 @@ export type Database = {
           is_played?: boolean;
           is_favorite?: boolean;
           is_archived?: boolean;
+          is_in_queue?: boolean;
           play_position?: number;
           updated_at?: string;
         };

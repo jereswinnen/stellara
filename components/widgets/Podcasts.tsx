@@ -5,7 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { usePodcasts, podcastEvents } from "@/hooks/usePodcasts";
-import { HeadphonesIcon, PlusIcon, Loader2, Pause, Play } from "lucide-react";
+import {
+  HeadphonesIcon,
+  PlusIcon,
+  Loader2,
+  Pause,
+  Play,
+  ListIcon,
+} from "lucide-react";
 import { useCommandMenu } from "@/components/providers/CommandMenuProvider";
 import { useAudioPlayer } from "@/components/providers/AudioPlayerProvider";
 import { formatDistanceToNow } from "date-fns";
@@ -44,9 +51,16 @@ export function Podcasts() {
     <Card className="col-span-3">
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-xl font-bold">Recent Podcasts</CardTitle>
-        <Button size="sm" className="size-8" onClick={openAddPodcastSheet}>
-          <PlusIcon className="size-4" />
-        </Button>
+        <div className="flex gap-2">
+          <Button size="sm" variant="outline" asChild>
+            <Link href="/podcasts">
+              <ListIcon className="size-4" />
+            </Link>
+          </Button>
+          <Button size="sm" className="size-8" onClick={openAddPodcastSheet}>
+            <PlusIcon className="size-4" />
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         {loading ? (
@@ -120,7 +134,10 @@ export function Podcasts() {
                     variant="ghost"
                     size="icon"
                     className="size-8"
-                    onClick={() => handlePlayEpisode(episode)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePlayEpisode(episode);
+                    }}
                     disabled={isPlaying}
                   >
                     {isCurrentlyLoading ? (
@@ -134,6 +151,11 @@ export function Podcasts() {
                 </div>
               );
             })}
+            <div className="flex justify-end">
+              <Button variant="link" size="sm" asChild>
+                <Link href="/podcasts">View all podcasts</Link>
+              </Button>
+            </div>
           </div>
         )}
       </CardContent>
