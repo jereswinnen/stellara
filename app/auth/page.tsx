@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Rainbow } from "lucide-react";
 import { SignInForm } from "@/components/auth/SignInForm";
 import { SignUpForm } from "@/components/auth/SignUpForm";
 import { PasswordResetForm } from "@/components/auth/PasswordResetForm";
 
-export default function AuthPage() {
+function AuthContent() {
   const searchParams = useSearchParams();
   const [mode, setMode] = useState<"signin" | "signup" | "reset">("signin");
 
@@ -73,5 +73,19 @@ export default function AuthPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AuthPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-svh flex items-center justify-center">
+          <div className="animate-pulse">Loading...</div>
+        </div>
+      }
+    >
+      <AuthContent />
+    </Suspense>
   );
 }
