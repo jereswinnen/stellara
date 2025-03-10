@@ -82,7 +82,7 @@ interface CommandMenuContextType {
   openAddBookSheet: () => void;
   openAddLinkSheet: () => void;
   openAddNoteSheet: () => void;
-  openAddPodcastFeedSheet: () => void;
+  openAddPodcastSheet: () => void;
 }
 
 const CommandMenuContext = createContext<CommandMenuContextType | undefined>(
@@ -181,7 +181,7 @@ export function CommandMenuProvider({
     setIsCommandOpen(false);
   }, []);
 
-  const openAddPodcastFeedSheet = useCallback(() => {
+  const openAddPodcastSheet = useCallback(() => {
     setIsAddPodcastSheetOpen(true);
     setIsCommandOpen(false);
   }, []);
@@ -290,7 +290,7 @@ export function CommandMenuProvider({
         openAddBookSheet,
         openAddLinkSheet,
         openAddNoteSheet,
-        openAddPodcastFeedSheet,
+        openAddPodcastSheet,
       }}
     >
       {children}
@@ -353,7 +353,7 @@ export function CommandMenuProvider({
               Add Note
               <CommandShortcut>⌘N</CommandShortcut>
             </CommandItem>
-            <CommandItem onSelect={openAddPodcastFeedSheet}>
+            <CommandItem onSelect={openAddPodcastSheet}>
               <HeadphonesIcon className="h-4 w-4" />
               Add Podcast Feed
               <CommandShortcut>⌘P</CommandShortcut>

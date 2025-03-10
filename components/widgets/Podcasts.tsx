@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { usePodcasts, podcastEvents } from "@/hooks/usePodcasts";
-import { HeadphonesIcon, PlusIcon, Loader2 } from "lucide-react";
+import { HeadphonesIcon, PlusIcon, Loader2, Pause, Play } from "lucide-react";
 import { useCommandMenu } from "@/components/providers/CommandMenuProvider";
 import { useAudioPlayer } from "@/components/providers/AudioPlayerProvider";
 import { formatDistanceToNow } from "date-fns";
@@ -16,7 +16,7 @@ export function Podcasts() {
   const { user } = useAuth();
   const { recentEpisodes, feeds, loading } = usePodcasts(user);
   const { playEpisode, currentEpisode, isLoading } = useAudioPlayer();
-  const { openAddPodcastFeedSheet } = useCommandMenu();
+  const { openAddPodcastSheet } = useCommandMenu();
   const [refreshKey, setRefreshKey] = useState(0);
 
   // Subscribe to podcast events to refresh the widget when podcasts change
@@ -42,40 +42,31 @@ export function Podcasts() {
 
   return (
     <Card className="col-span-3">
-      <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-        <CardTitle className="text-sm font-medium">Recent Podcasts</CardTitle>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="h-8 w-8"
-          onClick={openAddPodcastFeedSheet}
-        >
-          <PlusIcon className="h-4 w-4" />
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="text-xl font-bold">Recent Podcasts</CardTitle>
+        <Button size="sm" className="size-8" onClick={openAddPodcastSheet}>
+          <PlusIcon className="size-4" />
         </Button>
       </CardHeader>
       <CardContent>
         {loading ? (
-          <div className="flex items-center justify-center h-[140px]">
-            <HeadphonesIcon className="mr-2 h-4 w-4 animate-pulse" />
+          <div className="flex gap-2 items-center justify-center">
+            <Loader2 className="size-4 animate-spin" />
             <p className="text-sm text-muted-foreground">Loading podcasts...</p>
           </div>
         ) : recentEpisodes.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-[140px] text-center">
-            <HeadphonesIcon className="h-8 w-8 text-muted-foreground mb-2" />
-            <p className="text-sm text-muted-foreground mb-2">
+          <div className="flex flex-col gap-4 items-center justify-center text-center">
+            <HeadphonesIcon className="size-8 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">
               No podcast episodes yet
             </p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={openAddPodcastFeedSheet}
-            >
-              <PlusIcon className="mr-2 h-3 w-3" />
+            <Button variant="outline" size="sm" onClick={openAddPodcastSheet}>
+              <PlusIcon className="size-3" />
               Add Podcast
             </Button>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="flex flex-col gap-4">
             {recentEpisodes.slice(0, 5).map((episode) => {
               const feed = getFeedById(episode.feed_id);
               const isPlaying = currentEpisode?.id === episode.id;
@@ -84,61 +75,65 @@ export function Podcasts() {
               return (
                 <div
                   key={episode.id}
-                  className="flex items-center gap-2 p-2 rounded-md hover:bg-muted/50 transition-colors"
+                  className="cursor-pointer flex items-center gap-2 p-3 rounded-md border hover:bg-muted/50 transition-colors"
+                  onClick={() => handlePlayEpisode(episode)}
                 >
-                  <div className="h-10 w-10 flex-shrink-0">
+                  <div className="flex-shrink-0">
                     <img
                       src={episode.image_url || feed?.artwork_url || ""}
                       alt={episode.title}
-                      className="h-full w-full object-cover rounded-md"
+                      className="size-10 object-cover rounded"
                     />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="text-sm font-medium truncate">
+
+                  <div className="flex flex-1 flex-col">
+                    <p className="text-sm font-medium line-clamp-1">
                       {episode.title}
-                    </h4>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {feed?.title} •{" "}
-                      {formatDistanceToNow(new Date(episode.published_date), {
-                        addSuffix: true,
-                      })}
-                      {episode.play_position > 0 && !isPlaying && (
-                        <span className="ml-1 text-primary">
-                          •{" "}
-                          {Math.floor(
-                            (episode.play_position / episode.duration) * 100
-                          )}
-                          % played
-                        </span>
-                      )}
                     </p>
+                    <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <p className="line-clamp-1">{feed?.title}</p>
+                      <>
+                        <span className="text-muted-foreground">&bull;</span>
+                        <p>
+                          {formatDistanceToNow(
+                            new Date(episode.published_date),
+                            {
+                              addSuffix: true,
+                            }
+                          )}
+                        </p>
+                      </>
+                      {episode.play_position > 0 && !isPlaying && (
+                        <>
+                          <span className="text-muted-foreground">&bull;</span>
+                          <p>
+                            {Math.floor(
+                              (episode.play_position / episode.duration) * 100
+                            )}
+                            % played
+                          </p>
+                        </>
+                      )}
+                    </div>
                   </div>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8"
+                    className="size-8"
                     onClick={() => handlePlayEpisode(episode)}
                     disabled={isPlaying}
                   >
                     {isCurrentlyLoading ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <Loader2 className="size-4 animate-spin" />
                     ) : isPlaying ? (
-                      <HeadphonesIcon className="h-4 w-4 text-primary animate-pulse" />
+                      <Pause className="size-4 text-primary" />
                     ) : (
-                      <HeadphonesIcon className="h-4 w-4" />
+                      <Play className="size-4" />
                     )}
                   </Button>
                 </div>
               );
             })}
-            <div className="pt-2">
-              <Link
-                href="/podcasts"
-                className="text-xs text-muted-foreground hover:text-primary transition-colors"
-              >
-                View all podcasts →
-              </Link>
-            </div>
           </div>
         )}
       </CardContent>
