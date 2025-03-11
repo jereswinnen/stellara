@@ -14,7 +14,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { formatDistanceToNow } from "date-fns";
 import {
   HeadphonesIcon,
@@ -26,6 +31,14 @@ import {
   StarIcon,
   ListIcon,
   InboxIcon,
+  ListMusic,
+  AlignJustify,
+  Play,
+  Pause,
+  StarOff,
+  Star,
+  ListPlus,
+  Archive,
 } from "lucide-react";
 import { PodcastEpisode, PodcastFeed } from "@/hooks/usePodcasts";
 import { formatDuration } from "@/lib/utils";
@@ -52,9 +65,6 @@ export default function PodcastsPage() {
   const { playEpisode, currentEpisode, isLoading } = useAudioPlayer();
   const { openAddPodcastSheet } = useCommandMenu();
   const [activeTab, setActiveTab] = useState("inbox");
-  const [expandedEpisodes, setExpandedEpisodes] = useState<Set<string>>(
-    new Set()
-  );
   const [refreshingFeed, setRefreshingFeed] = useState<string | null>(null);
   const [playerVisible, setPlayerVisible] = useState(false);
   const [selectedPodcast, setSelectedPodcast] = useState<PodcastFeed | null>(
@@ -134,17 +144,6 @@ export default function PodcastsPage() {
       }
     });
   }, [feeds, loading, fetchEpisodeCount, episodeCounts, loadingCounts]);
-
-  // Toggle episode expanded state
-  const toggleEpisodeExpanded = (episodeId: string) => {
-    const newExpanded = new Set(expandedEpisodes);
-    if (newExpanded.has(episodeId)) {
-      newExpanded.delete(episodeId);
-    } else {
-      newExpanded.add(episodeId);
-    }
-    setExpandedEpisodes(newExpanded);
-  };
 
   // Handle refreshing a podcast feed
   const handleRefreshFeed = useCallback(
@@ -227,47 +226,14 @@ export default function PodcastsPage() {
     setIsPodcastSheetOpen(true);
   };
 
-  // Get episodes for the selected podcast (from database only)
-  const getPodcastEpisodes = (feedId: string): PodcastEpisode[] => {
-    return episodes
-      .filter((episode) => episode.feed_id === feedId)
-      .sort(
-        (a, b) =>
-          new Date(b.published_date).getTime() -
-          new Date(a.published_date).getTime()
-      );
-  };
-
-  // Get episodes based on active tab
-  const getTabEpisodes = (): PodcastEpisode[] => {
-    switch (activeTab) {
-      case "inbox":
-        return inboxEpisodes;
-      case "queue":
-        return queueEpisodes;
-      case "favorites":
-        return favoriteEpisodes;
-      default:
-        return episodes.filter((episode) => !episode.is_archived);
-    }
-  };
-
   // Find feed by ID
   const getFeedById = (feedId: string): PodcastFeed | undefined => {
     return feeds.find((feed) => feed.id === feedId);
   };
 
-  // Get episode count for a feed
-  const getEpisodeCount = (feedId: string): number | null => {
-    if (loadingCounts.has(feedId)) {
-      return null; // Still loading
-    }
-    return episodeCounts[feedId] || 0;
-  };
-
   return (
-    <div className="container mx-auto py-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="py-6 container mx-auto flex flex-col gap-10">
+      <header className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Podcasts</h1>
           <p className="text-muted-foreground">
@@ -275,56 +241,55 @@ export default function PodcastsPage() {
           </p>
         </div>
         <Button onClick={openAddPodcastSheet}>
-          <PlusIcon className="mr-2 h-4 w-4" />
+          <PlusIcon className="size-4" />
           Add Podcast Feed
         </Button>
-      </div>
+      </header>
 
       {loading ? (
-        <div className="flex items-center justify-center h-64">
-          <HeadphonesIcon className="mr-2 h-6 w-6 animate-pulse" />
-          <p>Loading podcasts...</p>
+        <div className="flex gap-2 items-center justify-center">
+          <Loader2 className="size-4 animate-spin" />
+          <p className="text-sm text-muted-foreground">Loading podcasts...</p>
         </div>
       ) : feeds.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center h-64">
-            <HeadphonesIcon className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-xl font-semibold mb-2">No podcasts yet</h3>
-            <p className="text-muted-foreground mb-4">
+        <div className="flex flex-col items-center justify-center gap-3 border border-border rounded-lg p-6">
+          <div className="p-2.5 size-12 rounded-lg border border-border">
+            <HeadphonesIcon className="size-full" />
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <h3 className="text-xl font-semibold">No podcasts yet</h3>
+            <p className="text-muted-foreground">
               Add your first podcast feed to get started
             </p>
-            <Button onClick={openAddPodcastSheet}>
-              <PlusIcon className="mr-2 h-4 w-4" />
-              Add Podcast Feed
-            </Button>
-          </CardContent>
-        </Card>
+          </div>
+          <Button onClick={openAddPodcastSheet}>
+            <PlusIcon className="size-4" />
+            Add Podcast Feed
+          </Button>
+        </div>
       ) : (
         <>
           <Tabs
             defaultValue="inbox"
             value={activeTab}
             onValueChange={setActiveTab}
-            className="mb-6"
+            className="flex flex-col gap-4"
           >
             <TabsList>
-              <TabsTrigger value="inbox" className="flex items-center gap-2">
-                <InboxIcon className="h-4 w-4" />
+              <TabsTrigger value="inbox">
+                <InboxIcon className="size-4" />
                 <span className="hidden sm:inline">Inbox</span>
               </TabsTrigger>
-              <TabsTrigger value="queue" className="flex items-center gap-2">
-                <ListIcon className="h-4 w-4" />
+              <TabsTrigger value="queue">
+                <ListMusic className="size-4" />
                 <span className="hidden sm:inline">Queue</span>
               </TabsTrigger>
-              <TabsTrigger
-                value="favorites"
-                className="flex items-center gap-2"
-              >
-                <StarIcon className="h-4 w-4" />
+              <TabsTrigger value="favorites">
+                <StarIcon className="size-4" />
                 <span className="hidden sm:inline">Favorites</span>
               </TabsTrigger>
-              <TabsTrigger value="all" className="flex items-center gap-2">
-                <ListIcon className="h-4 w-4" />
+              <TabsTrigger value="all">
+                <AlignJustify className="size-4" />
                 <span className="hidden sm:inline">All</span>
               </TabsTrigger>
             </TabsList>
@@ -333,10 +298,8 @@ export default function PodcastsPage() {
               <EpisodesList
                 episodes={inboxEpisodes}
                 feeds={feeds}
-                expandedEpisodes={expandedEpisodes}
                 currentEpisode={currentEpisode}
                 isLoading={isLoading}
-                toggleEpisodeExpanded={toggleEpisodeExpanded}
                 handleToggleFavorite={handleToggleFavorite}
                 handleToggleArchived={handleToggleArchived}
                 handleToggleQueue={handleToggleQueue}
@@ -351,10 +314,8 @@ export default function PodcastsPage() {
               <EpisodesList
                 episodes={queueEpisodes}
                 feeds={feeds}
-                expandedEpisodes={expandedEpisodes}
                 currentEpisode={currentEpisode}
                 isLoading={isLoading}
-                toggleEpisodeExpanded={toggleEpisodeExpanded}
                 handleToggleFavorite={handleToggleFavorite}
                 handleToggleArchived={handleToggleArchived}
                 handleToggleQueue={handleToggleQueue}
@@ -369,10 +330,8 @@ export default function PodcastsPage() {
               <EpisodesList
                 episodes={favoriteEpisodes}
                 feeds={feeds}
-                expandedEpisodes={expandedEpisodes}
                 currentEpisode={currentEpisode}
                 isLoading={isLoading}
-                toggleEpisodeExpanded={toggleEpisodeExpanded}
                 handleToggleFavorite={handleToggleFavorite}
                 handleToggleArchived={handleToggleArchived}
                 handleToggleQueue={handleToggleQueue}
@@ -459,16 +418,13 @@ export default function PodcastsPage() {
         </>
       )}
 
-      {/* Podcast Details Sheet */}
       <ViewPodcastSheet
         podcast={selectedPodcast}
         episodes={[]} // Start with empty array, let the sheet fetch all episodes
-        expandedEpisodes={expandedEpisodes}
         currentEpisode={currentEpisode}
         isLoading={isLoading}
         isOpen={isPodcastSheetOpen}
         onOpenChange={setIsPodcastSheetOpen}
-        toggleEpisodeExpanded={toggleEpisodeExpanded}
         handleToggleFavorite={handleToggleFavorite}
         handleToggleArchived={handleToggleArchived}
         handleToggleQueue={handleToggleQueue}
@@ -486,11 +442,8 @@ export default function PodcastsPage() {
 // Episodes List Component
 function EpisodesList({
   episodes,
-  feeds,
-  expandedEpisodes,
   currentEpisode,
   isLoading,
-  toggleEpisodeExpanded,
   handleToggleFavorite,
   handleToggleArchived,
   handleToggleQueue,
@@ -501,10 +454,8 @@ function EpisodesList({
 }: {
   episodes: PodcastEpisode[];
   feeds: PodcastFeed[];
-  expandedEpisodes: Set<string>;
   currentEpisode: PodcastEpisode | null;
   isLoading: boolean;
-  toggleEpisodeExpanded: (id: string) => void;
   handleToggleFavorite: (episode: PodcastEpisode) => void;
   handleToggleArchived: (episode: PodcastEpisode) => void;
   handleToggleQueue: (episode: PodcastEpisode) => void;
@@ -515,144 +466,153 @@ function EpisodesList({
 }) {
   if (episodes.length === 0) {
     return (
-      <Card>
-        <CardContent className="flex items-center justify-center h-32">
-          <p className="text-muted-foreground">No episodes found</p>
-        </CardContent>
-      </Card>
+      <div className="flex flex-col items-center justify-center gap-3 border border-border rounded-lg p-6">
+        <p className="text-muted-foreground">No episodes found</p>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col gap-4">
       {episodes.map((episode) => {
         const feed = getFeedById(episode.feed_id);
-        const isExpanded = expandedEpisodes.has(episode.id);
         const isPlaying = currentEpisode?.id === episode.id;
         const isCurrentlyLoading = isPlaying && isLoading;
 
         return (
-          <Card key={episode.id}>
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-4">
-                {(episode.image_url || feed?.artwork_url) && (
-                  <img
-                    src={episode.image_url || feed?.artwork_url || ""}
-                    alt={episode.title}
-                    className="h-16 w-16 rounded-md object-cover"
-                  />
-                )}
-                <div className="flex-1 min-w-0">
-                  <CardTitle
-                    className={`text-lg ${
-                      episode.is_played
-                        ? "text-muted-foreground"
-                        : "font-semibold"
-                    }`}
-                  >
-                    {episode.title}
-                  </CardTitle>
-                  <CardDescription className="truncate">
-                    {feed?.title} •{" "}
+          <div
+            key={episode.id}
+            className="flex items-center gap-3 border rounded-md p-3 hover:bg-accent/50 transition-colors"
+          >
+            {(episode.image_url || feed?.artwork_url) && (
+              <img
+                src={episode.image_url || feed?.artwork_url || ""}
+                alt={episode.title}
+                className="flex-shrink-0 size-10 object-cover rounded"
+              />
+            )}
+            <div className="flex flex-1 flex-col">
+              <div className="flex-1 min-w-0">
+                <h3 className="font-medium line-clamp-1">{episode.title}</h3>
+                <div className="flex items-center gap-1 text-xs text-muted-foreground line-clamp-1">
+                  <p>{feed?.title}</p>
+                  <span className="text-muted-foreground">&bull;</span>
+                  <p>
                     {formatDistanceToNow(new Date(episode.published_date), {
                       addSuffix: true,
                     })}
-                    {episode.duration > 0 &&
-                      ` • ${formatDuration(episode.duration)}`}
-                    {episode.play_position > 0 && !isPlaying && (
-                      <span className="ml-1 text-primary">
-                        •{" "}
+                  </p>
+
+                  {episode.duration > 0 && (
+                    <>
+                      <span className="text-muted-foreground">&bull;</span>
+                      <p>{formatDuration(episode.duration)}</p>
+                    </>
+                  )}
+
+                  {episode.play_position > 0 && !isPlaying && (
+                    <>
+                      <span className="text-muted-foreground">&bull;</span>
+                      <p>
                         {Math.floor(
                           (episode.play_position / episode.duration) * 100
                         )}
                         % played
-                      </span>
-                    )}
-                  </CardDescription>
+                      </p>
+                    </>
+                  )}
                 </div>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {isExpanded && (
-                  <div
-                    className="text-sm prose prose-sm max-w-none"
-                    dangerouslySetInnerHTML={{
-                      __html: episode.description,
-                    }}
-                  />
-                )}
-                <div className="flex justify-between items-center">
-                  <Button
-                    variant="link"
-                    size="sm"
-                    onClick={() => toggleEpisodeExpanded(episode.id)}
-                    className="px-0"
-                  >
-                    {isExpanded ? "Show less" : "Show more"}
-                  </Button>
-                  <div className="flex flex-wrap gap-2 justify-end">
-                    <Button
-                      variant={episode.is_favorite ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => handleToggleFavorite(episode)}
-                    >
-                      <StarIcon className="h-4 w-4 mr-1" />
-                      {episode.is_favorite ? "Favorited" : "Favorite"}
-                    </Button>
+            </div>
 
-                    {showQueueButton && (
-                      <Button
-                        variant={episode.is_in_queue ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => handleToggleQueue(episode)}
-                      >
-                        <ListIcon className="h-4 w-4 mr-1" />
-                        {episode.is_in_queue
-                          ? "Remove from Queue"
-                          : "Add to Queue"}
-                      </Button>
-                    )}
-
-                    {showArchiveButton && (
-                      <Button
-                        variant={episode.is_archived ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => handleToggleArchived(episode)}
-                      >
-                        <ArchiveIcon className="h-4 w-4 mr-1" />
-                        {episode.is_archived ? "Unarchive" : "Archive"}
-                      </Button>
-                    )}
-
-                    <Button
-                      variant="default"
-                      size="sm"
+            <div className="flex items-center gap-3">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <a
+                      className="flex-shrink-0 cursor-pointer"
+                      tabIndex={-1}
                       onClick={() => handlePlayEpisode(episode)}
-                      disabled={isPlaying}
                     >
                       {isCurrentlyLoading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Loading...
-                        </>
+                        <Loader2 className="size-4.5 animate-spin" />
                       ) : isPlaying ? (
-                        <>
-                          <HeadphonesIcon className="mr-2 h-4 w-4 animate-pulse" />
-                          Playing...
-                        </>
+                        <Pause className="size-4.5" />
                       ) : (
-                        <>
-                          <HeadphonesIcon className="mr-2 h-4 w-4" />
-                          Play
-                        </>
+                        <Play className="size-4.5" />
                       )}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+                    </a>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {isPlaying ? <p>Pause Episode</p> : <p>Play Episode</p>}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <a
+                      className="flex-shrink-0 cursor-pointer"
+                      tabIndex={-1}
+                      onClick={() => handleToggleFavorite(episode)}
+                    >
+                      {episode.is_favorite ? (
+                        <StarOff className="size-4.5 text-muted-foreground" />
+                      ) : (
+                        <Star className="size-4.5 text-muted-foreground hover:text-yellow-500" />
+                      )}
+                    </a>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {episode.is_favorite ? (
+                      <p>Unfavorite Episode</p>
+                    ) : (
+                      <p>Favorite Episode</p>
+                    )}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              {showQueueButton && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <a
+                        className="flex-shrink-0 cursor-pointer"
+                        tabIndex={-1}
+                        onClick={() => handleToggleQueue(episode)}
+                      >
+                        <ListPlus className="size-4.5 text-muted-foreground" />
+                      </a>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Add to Queue</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+
+              {showArchiveButton && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger>
+                      <a
+                        className="flex-shrink-0 cursor-pointer"
+                        tabIndex={-1}
+                        onClick={() => handleToggleArchived(episode)}
+                      >
+                        <Archive className="size-4.5 text-muted-foreground" />
+                      </a>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Add to Archive</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
+          </div>
         );
       })}
     </div>

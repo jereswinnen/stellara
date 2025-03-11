@@ -33,12 +33,10 @@ import { supabase } from "@/lib/supabase";
 interface ViewPodcastSheetProps {
   podcast: PodcastFeed | null;
   episodes: PodcastEpisode[];
-  expandedEpisodes: Set<string>;
   currentEpisode: PodcastEpisode | null;
   isLoading: boolean;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  toggleEpisodeExpanded: (id: string) => void;
   handleToggleFavorite: (episode: PodcastEpisode) => void;
   handleToggleArchived: (episode: PodcastEpisode) => void;
   handleToggleQueue: (episode: PodcastEpisode) => void;
@@ -50,12 +48,10 @@ interface ViewPodcastSheetProps {
 export function ViewPodcastSheet({
   podcast,
   episodes: initialEpisodes,
-  expandedEpisodes,
   currentEpisode,
   isLoading,
   isOpen,
   onOpenChange,
-  toggleEpisodeExpanded,
   handleToggleFavorite,
   handleToggleArchived,
   handleToggleQueue,
@@ -174,8 +170,7 @@ export function ViewPodcastSheet({
         .from("podcast_episodes")
         .insert({
           ...episodeData,
-          ...updates,
-          is_in_queue: updates.is_in_queue ?? false, // Default to inbox (not queued) unless explicitly set
+          ...updates, // Apply the updates
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
@@ -475,25 +470,7 @@ export function ViewPodcastSheet({
                       </CardHeader>
                       <CardContent>
                         <div className="space-y-4">
-                          {expandedEpisodes.has(episode.id) && (
-                            <div
-                              className="text-sm prose prose-sm max-w-none"
-                              dangerouslySetInnerHTML={{
-                                __html: episode.description,
-                              }}
-                            />
-                          )}
                           <div className="flex justify-between items-center">
-                            <Button
-                              variant="link"
-                              size="sm"
-                              onClick={() => toggleEpisodeExpanded(episode.id)}
-                              className="px-0"
-                            >
-                              {expandedEpisodes.has(episode.id)
-                                ? "Show less"
-                                : "Show more"}
-                            </Button>
                             <div className="flex flex-wrap gap-2 justify-end">
                               <Button
                                 variant={
