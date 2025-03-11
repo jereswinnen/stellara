@@ -91,7 +91,6 @@ export async function searchPodcasts(
     const data = await response.json();
     console.log("Search API response:", data);
 
-    // The API returns { podcasts: [...] }, so we need to extract the podcasts array
     if (data && data.podcasts && Array.isArray(data.podcasts)) {
       return data.podcasts;
     } else {
