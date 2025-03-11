@@ -118,8 +118,8 @@ export default function PasswordResetConfirmPage() {
               <p className="opacity-70">
                 Save links, articles, podcasts, books, and notes in a
                 beautifully organized space. Whether you&rsquo;re collecting
-                ideas, researching, or revisiting later, Arcova keeps everything
-                clean, distraction-free, and always within reach.
+                ideas, researching, or revisiting later, Stellara keeps
+                everything clean, distraction-free, and always within reach.
               </p>
             </article>
             <figure className="absolute size-full">
