@@ -1,30 +1,30 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import {
   Sheet,
   SheetContent,
-  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { formatDistanceToNow } from "date-fns";
 import {
-  HeadphonesIcon,
   Loader2,
-  StarIcon,
-  ListIcon,
-  ArchiveIcon,
-  RefreshCwIcon,
+  StarOff,
+  Star,
+  ListPlus,
+  Archive,
+  Pause,
+  Play,
+  ArchiveX,
+  ListX,
 } from "lucide-react";
 import { PodcastEpisode, PodcastFeed } from "@/hooks/usePodcasts";
 import { formatDuration } from "@/lib/utils";
@@ -44,6 +44,9 @@ interface ViewPodcastSheetProps {
   fetchAllEpisodesForFeed?: (feedId: string) => Promise<PodcastEpisode[]>;
   refreshPodcastFeed?: (feedId: string) => Promise<boolean>;
 }
+
+// Define types for tracking episode actions
+type ActionType = "favorite" | "queue" | "archive" | "play";
 
 export function ViewPodcastSheet({
   podcast,
@@ -66,6 +69,35 @@ export function ViewPodcastSheet({
   const [processingEpisodeIds, setProcessingEpisodeIds] = useState<Set<string>>(
     new Set()
   );
+
+  // Track which actions are in progress for each episode
+  const [episodeActions, setEpisodeActions] = useState<
+    Record<string, ActionType[]>
+  >({});
+
+  // Helper to mark an action as starting
+  const startAction = (episodeId: string, action: ActionType) => {
+    setEpisodeActions((prev) => ({
+      ...prev,
+      [episodeId]: [...(prev[episodeId] || []), action],
+    }));
+  };
+
+  // Helper to mark an action as complete
+  const endAction = (episodeId: string, action: ActionType) => {
+    setEpisodeActions((prev) => ({
+      ...prev,
+      [episodeId]: (prev[episodeId] || []).filter((a) => a !== action),
+    }));
+  };
+
+  // Check if an action is in progress
+  const isActionInProgress = (
+    episodeId: string,
+    action: ActionType
+  ): boolean => {
+    return (episodeActions[episodeId] || []).includes(action);
+  };
 
   // Handle sheet open/close
   const handleSheetOpenChange = (open: boolean) => {
@@ -193,6 +225,7 @@ export function ViewPodcastSheet({
   const handleToggleFavoriteWithTemp = async (episode: PodcastEpisode) => {
     const episodeId = episode.id;
     setProcessingEpisodeIds((prev) => new Set(prev).add(episodeId));
+    startAction(episodeId, "favorite");
 
     try {
       // If this is a temporary episode, add it to the database first
@@ -227,6 +260,7 @@ export function ViewPodcastSheet({
         newSet.delete(episodeId);
         return newSet;
       });
+      endAction(episodeId, "favorite");
     }
   };
 
@@ -234,6 +268,7 @@ export function ViewPodcastSheet({
   const handleToggleQueueWithTemp = async (episode: PodcastEpisode) => {
     const episodeId = episode.id;
     setProcessingEpisodeIds((prev) => new Set(prev).add(episodeId));
+    startAction(episodeId, "queue");
 
     try {
       // If this is a temporary episode, add it to the database first
@@ -268,6 +303,7 @@ export function ViewPodcastSheet({
         newSet.delete(episodeId);
         return newSet;
       });
+      endAction(episodeId, "queue");
     }
   };
 
@@ -275,6 +311,7 @@ export function ViewPodcastSheet({
   const handleToggleArchivedWithTemp = async (episode: PodcastEpisode) => {
     const episodeId = episode.id;
     setProcessingEpisodeIds((prev) => new Set(prev).add(episodeId));
+    startAction(episodeId, "archive");
 
     try {
       // If this is a temporary episode, add it to the database first
@@ -309,13 +346,21 @@ export function ViewPodcastSheet({
         newSet.delete(episodeId);
         return newSet;
       });
+      endAction(episodeId, "archive");
     }
   };
 
   // Handle playing an episode with temporary episode support
   const handlePlayEpisodeWithTemp = async (episode: PodcastEpisode) => {
+    // Don't show loading for play if it's already playing (which would be a pause action)
+    if (currentEpisode?.id === episode.id) {
+      await handlePlayEpisode(episode);
+      return;
+    }
+
     const episodeId = episode.id;
     setProcessingEpisodeIds((prev) => new Set(prev).add(episodeId));
+    startAction(episodeId, "play");
 
     try {
       // If this is a temporary episode, add it to the database first
@@ -343,226 +388,247 @@ export function ViewPodcastSheet({
         newSet.delete(episodeId);
         return newSet;
       });
+      endAction(episodeId, "play");
     }
   };
 
   return (
     <Sheet open={isOpen} onOpenChange={handleSheetOpenChange}>
-      <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+      <SheetContent className="overflow-y-auto">
         {podcast && (
           <>
-            <SheetHeader className="mb-4">
-              <div className="flex items-center gap-4">
+            <SheetHeader className="sticky top-0 bg-background/80 backdrop-blur-lg border-b border-border">
+              <SheetTitle>Podcast Details</SheetTitle>
+            </SheetHeader>
+
+            <div className="flex flex-col gap-4 px-4">
+              <div className="flex flex-col gap-3 items-center">
                 {podcast.artwork_url && (
                   <img
                     src={podcast.artwork_url}
                     alt={podcast.title}
-                    className="h-20 w-20 rounded-md object-cover"
+                    className="size-20 rounded-lg object-cover"
                   />
                 )}
-                <div className="flex-1">
-                  <SheetTitle>{podcast.title}</SheetTitle>
-                  <SheetDescription>{podcast.author}</SheetDescription>
+                <div className="flex flex-col items-center">
+                  <h3 className="text-lg font-bold line-clamp-1">
+                    {podcast.title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground line-clamp-1">
+                    {podcast.author}
+                  </p>
                 </div>
-                {refreshPodcastFeed && (
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={handleRefresh}
-                    disabled={isRefreshing}
-                  >
-                    <RefreshCwIcon
-                      className={`h-4 w-4 ${
-                        isRefreshing ? "animate-spin" : ""
-                      }`}
-                    />
-                  </Button>
-                )}
               </div>
-            </SheetHeader>
+              <Separator />
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-lg font-semibold">Episodes</h3>
+                  {isLoadingEpisodes && (
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="size-4 animate-spin" />
+                      <span className="text-sm text-muted-foreground">
+                        Loading...
+                      </span>
+                    </div>
+                  )}
+                </div>
 
-            <div className="mt-2 mb-6">
-              <div
-                className="text-sm prose prose-sm max-w-none"
-                dangerouslySetInnerHTML={{ __html: podcast.description }}
-              />
-            </div>
-
-            <Separator className="my-4" />
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">Episodes</h3>
-                {isLoadingEpisodes && (
-                  <div className="flex items-center gap-2">
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span className="text-sm text-muted-foreground">
-                      Loading episodes...
-                    </span>
+                {episodes.length === 0 ? (
+                  <div className="text-center py-4 text-muted-foreground">
+                    {isLoadingEpisodes
+                      ? "Loading episodes..."
+                      : "No episodes found for this podcast."}
                   </div>
-                )}
-              </div>
+                ) : (
+                  episodes.map((episode) => {
+                    const isProcessing = processingEpisodeIds.has(episode.id);
+                    const isTemp = isTemporaryEpisode(episode);
+                    const isEpisodePlaying = currentEpisode?.id === episode.id;
+                    const isEpisodeLoading = isEpisodePlaying && isLoading;
 
-              {episodes.length === 0 ? (
-                <div className="text-center py-4 text-muted-foreground">
-                  {isLoadingEpisodes
-                    ? "Loading episodes..."
-                    : "No episodes found for this podcast."}
-                </div>
-              ) : (
-                episodes.map((episode) => {
-                  const isProcessing = processingEpisodeIds.has(episode.id);
-                  const isTemp = isTemporaryEpisode(episode);
-                  const isEpisodePlaying = currentEpisode?.id === episode.id;
-                  const isEpisodeLoading = isEpisodePlaying && isLoading;
+                    // Check if specific actions are loading
+                    const isFavoriteLoading = isActionInProgress(
+                      episode.id,
+                      "favorite"
+                    );
+                    const isQueueLoading = isActionInProgress(
+                      episode.id,
+                      "queue"
+                    );
+                    const isArchiveLoading = isActionInProgress(
+                      episode.id,
+                      "archive"
+                    );
+                    const isPlayLoading = isActionInProgress(
+                      episode.id,
+                      "play"
+                    );
 
-                  return (
-                    <Card key={episode.id}>
-                      <CardHeader className="pb-2">
-                        <div className="flex items-center gap-4">
-                          {(episode.image_url || podcast.artwork_url) && (
-                            <img
-                              src={
-                                episode.image_url || podcast.artwork_url || ""
-                              }
-                              alt={episode.title}
-                              className="h-16 w-16 rounded-md object-cover"
-                            />
-                          )}
+                    return (
+                      <div
+                        key={episode.id}
+                        className="flex flex-col gap-3 border rounded-md p-3 hover:bg-accent/50 transition-colors"
+                      >
+                        <div className="flex flex-1 flex-col">
                           <div className="flex-1 min-w-0">
-                            <CardTitle
-                              className={`text-lg ${
-                                episode.is_played
-                                  ? "text-muted-foreground"
-                                  : "font-semibold"
-                              }`}
-                            >
+                            <h3 className="font-medium line-clamp-2">
                               {episode.title}
-                            </CardTitle>
-                            <CardDescription className="truncate">
-                              {formatDistanceToNow(
-                                new Date(episode.published_date),
-                                { addSuffix: true }
-                              )}
-                              {episode.duration > 0 &&
-                                ` • ${formatDuration(episode.duration)}`}
-                              {episode.play_position > 0 && !isLoading && (
-                                <span className="ml-1 text-primary">
-                                  •{" "}
-                                  {Math.floor(
-                                    (episode.play_position / episode.duration) *
-                                      100
-                                  )}
-                                  % played
-                                </span>
-                              )}
-                              {isTemp && (
-                                <span className="ml-1 text-muted-foreground">
-                                  •{" "}
-                                  <span className="bg-muted px-1 py-0.5 rounded-sm text-xs">
-                                    Not in library
+                            </h3>
+                            <div className="flex items-center gap-1 text-xs text-muted-foreground line-clamp-1">
+                              <p>
+                                {formatDistanceToNow(
+                                  new Date(episode.published_date),
+                                  {
+                                    addSuffix: true,
+                                  }
+                                )}
+                              </p>
+
+                              {episode.duration > 0 && (
+                                <>
+                                  <span className="text-muted-foreground">
+                                    &bull;
                                   </span>
-                                </span>
+                                  <p>{formatDuration(episode.duration)}</p>
+                                </>
                               )}
-                            </CardDescription>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-4">
-                          <div className="flex justify-between items-center">
-                            <div className="flex flex-wrap gap-2 justify-end">
-                              <Button
-                                variant={
-                                  episode.is_favorite ? "default" : "outline"
-                                }
-                                size="sm"
-                                onClick={() =>
-                                  handleToggleFavoriteWithTemp(episode)
-                                }
-                                disabled={isProcessing}
-                              >
-                                {isProcessing ? (
-                                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                                ) : (
-                                  <StarIcon className="h-4 w-4 mr-1" />
-                                )}
-                                {episode.is_favorite ? "Favorited" : "Favorite"}
-                              </Button>
-                              <Button
-                                variant={
-                                  episode.is_in_queue ? "default" : "outline"
-                                }
-                                size="sm"
-                                onClick={() =>
-                                  handleToggleQueueWithTemp(episode)
-                                }
-                                disabled={isProcessing}
-                              >
-                                {isProcessing ? (
-                                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                                ) : (
-                                  <ListIcon className="h-4 w-4 mr-1" />
-                                )}
-                                {episode.is_in_queue
-                                  ? "Remove from Queue"
-                                  : "Add to Queue"}
-                              </Button>
-                              <Button
-                                variant={
-                                  episode.is_archived ? "default" : "outline"
-                                }
-                                size="sm"
-                                onClick={() =>
-                                  handleToggleArchivedWithTemp(episode)
-                                }
-                                disabled={isProcessing}
-                              >
-                                {isProcessing ? (
-                                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                                ) : (
-                                  <ArchiveIcon className="h-4 w-4 mr-1" />
-                                )}
-                                {episode.is_archived ? "Unarchive" : "Archive"}
-                              </Button>
-                              <Button
-                                variant="default"
-                                size="sm"
-                                onClick={() =>
-                                  handlePlayEpisodeWithTemp(episode)
-                                }
-                                disabled={isEpisodePlaying || isProcessing}
-                              >
-                                {isProcessing ? (
+
+                              {episode.play_position > 0 &&
+                                !isEpisodePlaying && (
                                   <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Processing...
-                                  </>
-                                ) : isEpisodeLoading ? (
-                                  <>
-                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Loading...
-                                  </>
-                                ) : isEpisodePlaying ? (
-                                  <>
-                                    <HeadphonesIcon className="mr-2 h-4 w-4 animate-pulse" />
-                                    Playing...
-                                  </>
-                                ) : (
-                                  <>
-                                    <HeadphonesIcon className="mr-2 h-4 w-4" />
-                                    Play
+                                    <span className="text-muted-foreground">
+                                      &bull;
+                                    </span>
+                                    <p>
+                                      {Math.floor(
+                                        (episode.play_position /
+                                          episode.duration) *
+                                          100
+                                      )}
+                                      % played
+                                    </p>
                                   </>
                                 )}
-                              </Button>
                             </div>
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>
-                  );
-                })
-              )}
+
+                        <div className="flex items-center gap-3">
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <a
+                                  className="flex-shrink-0 cursor-pointer"
+                                  tabIndex={-1}
+                                  onClick={() =>
+                                    handlePlayEpisodeWithTemp(episode)
+                                  }
+                                >
+                                  {isEpisodeLoading || isPlayLoading ? (
+                                    <Loader2 className="size-4.5 animate-spin" />
+                                  ) : isEpisodePlaying ? (
+                                    <Pause className="size-4.5" />
+                                  ) : (
+                                    <Play className="size-4.5" />
+                                  )}
+                                </a>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {isEpisodePlaying ? (
+                                  <p>Pause Episode</p>
+                                ) : (
+                                  <p>Play Episode</p>
+                                )}
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <a
+                                  className="flex-shrink-0 cursor-pointer"
+                                  tabIndex={-1}
+                                  onClick={() =>
+                                    handleToggleFavoriteWithTemp(episode)
+                                  }
+                                >
+                                  {isFavoriteLoading ? (
+                                    <Loader2 className="size-4.5 animate-spin text-muted-foreground" />
+                                  ) : episode.is_favorite ? (
+                                    <StarOff className="size-4.5 text-yellow-500 hover:text-muted-foreground" />
+                                  ) : (
+                                    <Star className="size-4.5 text-muted-foreground hover:text-yellow-500" />
+                                  )}
+                                </a>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {episode.is_favorite ? (
+                                  <p>Unfavorite Episode</p>
+                                ) : (
+                                  <p>Favorite Episode</p>
+                                )}
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <a
+                                  className="flex-shrink-0 cursor-pointer"
+                                  tabIndex={-1}
+                                  onClick={() =>
+                                    handleToggleQueueWithTemp(episode)
+                                  }
+                                >
+                                  {isQueueLoading ? (
+                                    <Loader2 className="size-4.5 animate-spin text-muted-foreground" />
+                                  ) : episode.is_in_queue ? (
+                                    <ListX className="size-4.5 text-blue-500 hover:text-muted-foreground" />
+                                  ) : (
+                                    <ListPlus className="size-4.5 text-muted-foreground hover:text-blue-500" />
+                                  )}
+                                </a>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {episode.is_in_queue
+                                  ? "Remove from Queue"
+                                  : "Add to Queue"}
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <a
+                                  className="flex-shrink-0 cursor-pointer"
+                                  tabIndex={-1}
+                                  onClick={() =>
+                                    handleToggleArchivedWithTemp(episode)
+                                  }
+                                >
+                                  {isArchiveLoading ? (
+                                    <Loader2 className="size-4.5 animate-spin text-muted-foreground" />
+                                  ) : episode.is_archived ? (
+                                    <ArchiveX className="size-4.5 text-pink-500 hover:text-muted-foreground" />
+                                  ) : (
+                                    <Archive className="size-4.5 text-muted-foreground hover:text-pink-500" />
+                                  )}
+                                </a>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                {episode.is_archived ? "Unarchive" : "Archive"}
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
             </div>
           </>
         )}

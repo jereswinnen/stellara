@@ -37,6 +37,8 @@ import {
   Star,
   ListPlus,
   Archive,
+  ArchiveX,
+  ListX,
 } from "lucide-react";
 import { PodcastEpisode, PodcastFeed } from "@/hooks/usePodcasts";
 import { formatDuration } from "@/lib/utils";
@@ -636,11 +638,19 @@ function EpisodesList({
                         tabIndex={-1}
                         onClick={() => handleToggleQueue(episode)}
                       >
-                        <ListPlus className="size-4.5 text-muted-foreground" />
+                        {episode.is_in_queue ? (
+                          <ListX className="size-4.5 text-muted-foreground" />
+                        ) : (
+                          <ListPlus className="size-4.5 text-muted-foreground hover:text-blue-500" />
+                        )}
                       </a>
                     </TooltipTrigger>
                     <TooltipContent>
-                      <p>Add to Queue</p>
+                      {episode.is_in_queue ? (
+                        <p>Remove from Queue</p>
+                      ) : (
+                        <p>Add to Queue</p>
+                      )}
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -655,7 +665,11 @@ function EpisodesList({
                         tabIndex={-1}
                         onClick={() => handleToggleArchived(episode)}
                       >
-                        <Archive className="size-4.5 text-muted-foreground" />
+                        {episode.is_archived ? (
+                          <ArchiveX className="size-4.5 text-muted-foreground" />
+                        ) : (
+                          <Archive className="size-4.5 text-muted-foreground hover:text-pink-500" />
+                        )}
                       </a>
                     </TooltipTrigger>
                     <TooltipContent>
