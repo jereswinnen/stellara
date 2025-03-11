@@ -27,9 +27,7 @@ import {
   RefreshCwIcon,
   Trash2Icon,
   Loader2,
-  ArchiveIcon,
   StarIcon,
-  ListIcon,
   InboxIcon,
   ListMusic,
   AlignJustify,
@@ -43,7 +41,17 @@ import {
 import { PodcastEpisode, PodcastFeed } from "@/hooks/usePodcasts";
 import { formatDuration } from "@/lib/utils";
 import { ViewPodcastSheet } from "@/components/global/sheets/ViewPodcastSheet";
-
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 export default function PodcastsPage() {
   const { user } = useAuth();
   const {
@@ -67,7 +75,11 @@ export default function PodcastsPage() {
   const [activeTab, setActiveTab] = useState("inbox");
   const [refreshingFeed, setRefreshingFeed] = useState<string | null>(null);
   const [playerVisible, setPlayerVisible] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedPodcast, setSelectedPodcast] = useState<PodcastFeed | null>(
+    null
+  );
+  const [podcastToDelete, setPodcastToDelete] = useState<PodcastFeed | null>(
     null
   );
   const [isPodcastSheetOpen, setIsPodcastSheetOpen] = useState(false);
@@ -169,23 +181,17 @@ export default function PodcastsPage() {
 
   // Handle deleting a podcast feed
   const handleDeleteFeed = async (feedId: string) => {
-    if (
-      confirm(
-        "Are you sure you want to delete this podcast feed and all its episodes?"
-      )
-    ) {
-      await deletePodcastFeed(feedId);
-      // Clear the cache for this feed
-      clearEpisodeCountCache(feedId);
-      // Remove from processed feeds
-      processedFeedsRef.current.delete(feedId);
-      // Remove from episode counts
-      setEpisodeCounts((prev) => {
-        const newCounts = { ...prev };
-        delete newCounts[feedId];
-        return newCounts;
-      });
-    }
+    await deletePodcastFeed(feedId);
+    // Clear the cache for this feed
+    clearEpisodeCountCache(feedId);
+    // Remove from processed feeds
+    processedFeedsRef.current.delete(feedId);
+    // Remove from episode counts
+    setEpisodeCounts((prev) => {
+      const newCounts = { ...prev };
+      delete newCounts[feedId];
+      return newCounts;
+    });
   };
 
   // Handle playing an episode
@@ -392,20 +398,23 @@ export default function PodcastsPage() {
                             disabled={refreshingFeed === feed.id}
                           >
                             <RefreshCwIcon
-                              className={`h-4 w-4 ${
+                              className={`size-4 ${
                                 refreshingFeed === feed.id ? "animate-spin" : ""
                               }`}
                             />
                           </Button>
+
                           <Button
-                            variant="outline"
+                            variant="destructive"
                             size="icon"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleDeleteFeed(feed.id);
+                              setPodcastToDelete(feed);
+                              setIsDeleteDialogOpen(true);
                             }}
+                            disabled={isLoading}
                           >
-                            <Trash2Icon className="h-4 w-4" />
+                            <Trash2Icon className="size-4" />
                           </Button>
                         </div>
                       </div>
@@ -432,6 +441,50 @@ export default function PodcastsPage() {
         fetchAllEpisodesForFeed={fetchAllEpisodesForFeed}
         refreshPodcastFeed={refreshPodcastFeed}
       />
+
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) setPodcastToDelete(null);
+          setIsDeleteDialogOpen(open);
+        }}
+      >
+        <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete{" "}
+              {podcastToDelete?.title || "this podcast"} and its related
+              episodes. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={(e) => e.stopPropagation()}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.stopPropagation();
+                if (podcastToDelete) {
+                  handleDeleteFeed(podcastToDelete.id);
+                }
+                setIsDeleteDialogOpen(false);
+              }}
+              disabled={isLoading}
+              className="bg-destructive text-white hover:bg-destructive/90"
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="size-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Add padding at the bottom to account for the audio player */}
       {playerVisible && <div className="h-20" />}

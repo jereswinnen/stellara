@@ -222,15 +222,6 @@ export function ViewNoteSheet({
                   </AlertDialogFooter>
                 </AlertDialogContent>
               </AlertDialog>
-              {/* <Button
-                variant="outline"
-                onClick={() => setShowDeleteConfirm(true)}
-                disabled={isLoading}
-                className="text-destructive"
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Delete
-              </Button> */}
               <Button
                 onClick={handleSaveChanges}
                 disabled={
@@ -243,28 +234,6 @@ export function ViewNoteSheet({
           </div>
         </SheetContent>
       </Sheet>
-
-      {/* <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete your
-              note.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteNote}
-              disabled={isDeleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {isDeleting ? "Deleting..." : "Delete"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog> */}
     </>
   );
 }
