@@ -174,7 +174,8 @@ export function ViewPodcastSheet({
         .from("podcast_episodes")
         .insert({
           ...episodeData,
-          ...updates, // Apply the updates
+          ...updates,
+          is_in_queue: updates.is_in_queue ?? false, // Default to inbox (not queued) unless explicitly set
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })

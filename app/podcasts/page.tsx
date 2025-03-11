@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { usePodcasts } from "@/hooks/usePodcasts";
+import { usePodcasts, podcastEvents } from "@/hooks/usePodcasts";
 import { useCommandMenu } from "@/components/providers/CommandMenuProvider";
 import { useAudioPlayer } from "@/components/providers/AudioPlayerProvider";
 import { Button } from "@/components/ui/button";
@@ -46,6 +46,8 @@ export default function PodcastsPage() {
     fetchAllEpisodesForFeed,
     getEpisodeCountForFeed,
     clearEpisodeCountCache,
+    fetchFeeds,
+    fetchEpisodes,
   } = usePodcasts(user);
   const { playEpisode, currentEpisode, isLoading } = useAudioPlayer();
   const { openAddPodcastSheet } = useCommandMenu();
@@ -66,6 +68,22 @@ export default function PodcastsPage() {
 
   // Use a ref to track which feeds we've already processed
   const processedFeedsRef = useRef<Set<string>>(new Set());
+
+  // Subscribe to podcast events to refresh data when changes occur
+  useEffect(() => {
+    const unsubscribe = podcastEvents.subscribe(() => {
+      console.log("PodcastsPage: Received podcast event, refreshing data");
+      fetchFeeds();
+      fetchEpisodes();
+      // Clear all episode counts to force a refresh
+      processedFeedsRef.current.clear();
+      setEpisodeCounts({});
+    });
+
+    return () => {
+      unsubscribe();
+    };
+  }, [fetchFeeds, fetchEpisodes]);
 
   // Update player visibility when currentEpisode changes
   useEffect(() => {
